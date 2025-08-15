@@ -1,52 +1,48 @@
-def call(Map config = [:]) {
-    // def params   = new devops.v1.ParamPreparer(this).prepare(config)
-    // def docker   = new devops.v1.DockerBuilder(this)
-    // def scanner  = new devops.v1.SecurityScanner(this)
-    // def deployer = new devops.v1.DeployManager(this)
-    // def summary  = new devops.v1.SummaryPrinter(this)
-    // def git      = new devops.v1.GitHelper(this)
+import devops.v1.ParamPreparer
 
-    // def imageTag = params.imageTag ?: git.getShortCommit()
-    // def podLabel = "pod-${UUID.randomUUID().toString()}"
+// ------- Define UI Parameters (Scripted uses `properties(...)`) -------
+properties([
+  parameters([
+    // Core
+    string(name: 'REPO_URL', defaultValue: '', description: 'Git repository URL'),
+    choice(name: 'ENV', choices: ['dev', 'staging', 'prod'], description: 'Target environment'),
+    choice(
+      name: 'PIPELINE_MODE',
+      choices: ['build-only', 'deploy-only', 'full-cicd'],
+      description: 'Pipeline mode'
+    )
+])
 
-    pipeline {
-        agent any
-        //   environment {
-        //   JAVA_HOME = '/opt/java/openjdk'   // <--- ปรับให้ตรง path ในเครื่อง agent
-        // PATH = "${env.JAVA_HOME}/bin:${env.PATH}"
-        //   }
-        tools {
-            maven 'Maven'
-        }
-        stages {
-            stage('Check out') {
-                steps {
-                    git branch: 'main', url:'https://github.com/shazforiot/java_maven_project.git'
-                }
-            }
-            stage('Clean') {
-                steps {
-                    sh 'mvn clean'
-                }
-            }
-            stage('Scanner') {
-                steps {
-                    withSonarQubeEnv('SonarQube') {
-                        withCredentials([string(credentialsId: 'sonar_token', variable: 'SONAR_TOKEN')]) {
-                            sh 'mvn sonar:sonar -Dsonar.login=$SONAR_TOKEN Dsonar.projectKey=Java'
-                        }
-                    }
-                }
-            }
-            stage('Build') {
-                steps {
-                    //echo "JAVA_HOME is: ${env.JAVA_HOME}"
-                    // sh 'echo $JAVA_HOME'
-                    withMaven(globalMavenSettingsConfig: '', jdk: 'JDK-24', maven: 'Maven', mavenSettingsConfig: '', traceability: true) {
-                        sh 'mvn install'
-                    }
-                }
-            }
-        }
+// Will hold prepared config across nodes
+def prep = new ParamPreparer()
+def podYaml = ''
+
+// ------------------- Prep on a controller/agent -------------------
+node('master') { // change label as needed
+  stage('Checkout') {
+    
+  }
+
+  stage('Prepare Parameters') {
+    
+  }
+
+  stage('Prepare Agent') {
+
+  }
+}
+
+// ------------------- Run inside Kubernetes podTemplate -------------------
+podTemplate(yaml: podYaml) {
+  node(POD_LABEL) {
+
+    stage('Checkout') {
     }
+    stage('Build') {
+    }
+    stage('Security Scan') {
+    }
+    stage('Deploy') {
+    }
+  }
 }
