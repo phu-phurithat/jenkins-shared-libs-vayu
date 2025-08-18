@@ -25,34 +25,38 @@ properties([
 ])
 
 // Will hold prepared config across nodes
-def prep = new ParamPreparer()
+def prep = new ParamPreparer(params)
 
 // ------------------- Prep on a controller/agent -------------------
 node('master') { // change label as needed
   stage('Checkout') {
-    
+    echo 'Checkout code from repository...'
   }
 
   stage('Prepare Parameters') {
-    
+    echo 'Preparing parameters...'
   }
 
   stage('Prepare Agent') {
-
+    echo 'Preparing agent for execution...'
   }
 }
 
 // ------------------- Run inside Kubernetes podTemplate -------------------
-podTemplate(yaml: podYaml) {
-  node(POD_LABEL) {
+// podTemplate(yaml: podYaml) {
+//   node(POD_LABEL) {
 
-    stage('Checkout') {
-    }
-    stage('Build') {
-    }
-    stage('Security Scan') {
-    }
-    stage('Deploy') {
-    }
-  }
-}
+//     stage('Checkout') {
+//       echo 'Checkout code from repository...'
+//     }
+//     stage('Build') {
+//       echo 'Building Docker image...'
+//     }
+//     stage('Security Scan') {
+//       echo 'Running security scan on Docker image...'
+//     }
+//     stage('Deploy') {
+//       echo 'Deploying application to Kubernetes...'
+//     }
+//   }
+// }
