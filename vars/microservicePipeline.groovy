@@ -1,6 +1,7 @@
 import devops.v1.ParamPreparer
 
-// ------- Define UI Parameters (Scripted uses `properties(...)`) -------
+def call(){
+  // ------- Define UI Parameters (Scripted uses `properties(...)`) -------
 properties([
   parameters([
     // Core
@@ -60,3 +61,4 @@ node('master') { // change label as needed
 //     }
 //   }
 // }
+}
