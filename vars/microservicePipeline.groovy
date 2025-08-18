@@ -35,6 +35,7 @@ node('master') { // change label as needed
 
   stage('Prepare Parameters') {
     echo 'Preparing parameters...'
+    prep.validateParams()
   }
 
   stage('Prepare Agent') {
