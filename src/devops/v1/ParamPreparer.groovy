@@ -25,4 +25,19 @@ class ParamPreparer implements Serializable {
       error('REPO_URL is required')
     }
   }
+
+  void printParams() {
+    echo """
+---------------------------------------------
+Prepared Parameters:
+REPO_URL: ${repoUrl}
+ENV: ${env}
+PIPELINE_MODE: ${pipelineMode}
+REGISTRY_URL: ${registryUrl}
+IMAGE_NAME: ${imageName}
+IMAGE_TAG: ${imageTag}
+DOCKERFILE_PATH: ${dockerfilePath}
+---------------------------------------------
+    """
+  }
 }
