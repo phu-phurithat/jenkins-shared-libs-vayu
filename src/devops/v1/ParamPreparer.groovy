@@ -24,20 +24,5 @@ class ParamPreparer implements Serializable {
     if (!repoUrl) {
       error('REPO_URL is required')
     }
-    if (!env) {
-      error('ENV is required')
-    }
-    if (!pipelineMode) {
-      error('PIPELINE_MODE is required')
-    }
-    if (!registryUrl) {
-      error('REGISTRY_URL is required')
-    }
-    if (!imageName) {
-      error('IMAGE_NAME is required')
-    }
-    if (!imageTag) {
-      error('IMAGE_TAG is required')
-    }
   }
 }
