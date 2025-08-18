@@ -25,7 +25,7 @@ properties([
 ])
 
 // Will hold prepared config across nodes
-def prep = new ParamPreparer()
+def prep = new ParamPreparer(params)
 
 // ------------------- Prep on a controller/agent -------------------
 node('master') { // change label as needed
