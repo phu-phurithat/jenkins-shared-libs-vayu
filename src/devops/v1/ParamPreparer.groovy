@@ -26,9 +26,9 @@ class ParamPreparer implements Serializable {
     }
   }
 
-  void printParams() {
-    echo """
----------------------------------------------
+  String printParams() {
+    return """
+=========================
 Prepared Parameters:
 REPO_URL: ${repoUrl}
 ENV: ${env}
@@ -37,7 +37,7 @@ REGISTRY_URL: ${registryUrl}
 IMAGE_NAME: ${imageName}
 IMAGE_TAG: ${imageTag}
 DOCKERFILE_PATH: ${dockerfilePath}
----------------------------------------------
+=========================
     """
   }
 }
