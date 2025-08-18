@@ -10,7 +10,7 @@ class ParamPreparer implements Serializable {
   String imageTag
   String dockerfilePath
 
-  void prepareParams(Map params) {
+  void prepareParams() {
     this.repoUrl = params.get('REPO_URL', this.repoUrl)
     this.env = params.get('ENV', this.env)
     this.pipelineMode = params.get('PIPELINE_MODE', this.pipelineMode)
