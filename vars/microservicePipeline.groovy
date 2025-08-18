@@ -9,13 +9,23 @@ properties([
     choice(
       name: 'PIPELINE_MODE',
       choices: ['build-only', 'deploy-only', 'full-cicd'],
+      defaultValue: 'build-only',
       description: 'Pipeline mode'
-    )
+    ),
+
+    // Build
+    string(name: 'REGISTRY_URL', defaultValue: '', description: 'Harbor registry URL'),
+    string(name: 'IMAGE_NAME', defaultValue: '', description: 'Image name'),
+    string(name: 'IMAGE_TAG', defaultValue: '', description: 'Image tag'),
+    string(name: 'DOCKERFILE_PATH', defaultValue: 'Dockerfile', description: 'Path to Dockerfile(Default: Dockerfile)'),
+
+    // Deploy
+    
+  ])
 ])
 
 // Will hold prepared config across nodes
 def prep = new ParamPreparer()
-def podYaml = ''
 
 // ------------------- Prep on a controller/agent -------------------
 node('master') { // change label as needed
