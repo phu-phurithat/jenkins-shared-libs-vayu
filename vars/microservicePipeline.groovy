@@ -1,8 +1,8 @@
 import devops.v1.ParamPreparer
 
-def call(){
+def call() {
   // ------- Define UI Parameters (Scripted uses `properties(...)`) -------
-properties([
+  properties([
   parameters([
     // Core
     string(name: 'REPO_URL', defaultValue: '', description: 'Git repository URL'),
@@ -20,28 +20,34 @@ properties([
     string(name: 'DOCKERFILE_PATH', defaultValue: 'Dockerfile', description: 'Path to Dockerfile(Default: Dockerfile)'),
 
     // Deploy
-    
+
+    string(name: 'IMAGE_TAG', defaultValue: '', description: 'Image tag'),
+    string(name: 'DOCKERFILE_PATH', defaultValue: 'Dockerfile', description: 'Path to Dockerfile(Default: Dockerfile)'),
+
+    // Deploy
+
   ])
 ])
 
-// Will hold prepared config across nodes
-def prep = new ParamPreparer(params)
+  // Will hold prepared config across nodes
+  def prep = new ParamPreparer()
 
-// ------------------- Prep on a controller/agent -------------------
-node('master') { // change label as needed
-  stage('Checkout') {
-    echo 'Checkout code from repository...'
-  }
+  // ------------------- Prep on a controller/agent -------------------
+  node('master') { // change label as needed
+    stage('Checkout') {
+      echo 'Checkout code from repository...'
+    }
 
-  stage('Prepare Parameters') {
-    echo 'Preparing parameters...'
-    prep.validateParams()
-  }
+    stage('Prepare Parameters') {
+      echo 'Preparing parameters...'
+      prep.prepareParams(params)
+      prep.validateParams()
+    }
 
-  stage('Prepare Agent') {
-    echo 'Preparing agent for execution...'
+    stage('Prepare Agent') {
+      echo 'Preparing agent for execution...'
+    }
   }
-}
 
 // ------------------- Run inside Kubernetes podTemplate -------------------
 // podTemplate(yaml: podYaml) {
