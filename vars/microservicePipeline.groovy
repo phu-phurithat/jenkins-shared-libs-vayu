@@ -10,7 +10,6 @@ properties([
     choice(
       name: 'PIPELINE_MODE',
       choices: ['build-only', 'deploy-only', 'full-cicd'],
-      defaultValue: 'build-only',
       description: 'Pipeline mode'
     ),
 
