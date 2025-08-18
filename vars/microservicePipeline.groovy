@@ -42,6 +42,7 @@ def call() {
       echo 'Preparing parameters...'
       prep.prepareParams(params)
       prep.validateParams()
+      prep.printParams()
     }
 
     stage('Prepare Agent') {
