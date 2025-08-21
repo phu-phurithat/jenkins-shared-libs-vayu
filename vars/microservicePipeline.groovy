@@ -131,18 +131,19 @@ spec:
       }
       stage('Build Docker Image') {
         container('docker') {
-          sh 'docker build  -t harbor.phurithat.site/boardgame_1/boardgame:latest .'
+          sh 'docker build  -t boardgame_1/boardgame:latest .'
         }
       }
       stage('Image Scan') {
         container('trivy') {
-          sh  'trivy image --severity HIGH,CRITICAL harbor.phurithat.site/boardgame_1/boardgame:latest'
+          sh  'trivy image --severity HIGH,CRITICAL boardgame_1/boardgame:latest'
         }
       }
       stage('Push Docker Image to Harbor') {
         container('docker') {
           withCredentials([usernamePassword(credentialsId: 'harbor_cred', usernameVariable: 'H_USER', passwordVariable: 'H_PASS')]) {
             sh '''
+            docker tag boardgame_1/boardgame:latest harbor.phurithat.site/boardgame_1/boardgame:latest
             docker login harbor.phurithat.site -u $H_USER -p $H_PASS
             docker push harbor.phurithat.site/boardgame_1/boardgame:latest
         '''
