@@ -30,12 +30,26 @@ metadata:
   name: agent-pod
 spec:
   containers:
+  - name: agent-container
+    image: jenkins/inbound-agent:latest
+    imagePullPolicy: Always
+    command:
+    - cat
+    tty: true
+    volumeMounts:
+    - name: shared
+      mountPath: /jenkins-agent
   - name: maven
     image: maven:3.9.8-eclipse-temurin-17
     imagePullPolicy: Always
     command:
     - cat
     tty: true
+    resources:
+      requests:
+        ephemeral-storage: "512Mi"
+      limits:
+        ephemeral-storage: "1Gi"
   - name: nodejs
     image: node:20
     imagePullPolicy: Always
@@ -54,6 +68,15 @@ spec:
     command:
     - cat
     tty: true
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "2Gi"
+        ephemeral-storage: "512Mi"
+      limits:
+        cpu: "1000m"
+        memory: "4Gi"
+        ephemeral-storage: "1Gi"
   - name: trivy
     image: aquasec/trivy:0.54.1
     imagePullPolicy: Always
@@ -61,8 +84,10 @@ spec:
     - cat
     tty: true
     volumeMounts:
-      - name: docker-sock
-        mountPath: /var/run/docker.sock
+      - name: shared
+        mountPath: /jenkins-agent
+      - name: harbor-secret
+        mountPath: /root/.docker
     resources:
       requests:
         cpu: "200m"
@@ -84,26 +109,26 @@ spec:
     command:
     - cat
     tty: true
-  - name: docker
-    image: docker:20.10.7
-    command: ['cat']
+  - name: buildkit
+    image: moby/buildkit:latest
     tty: true
+    command: ['cat',]
+    securityContext:
+      privileged: true
     volumeMounts:
-      - name: docker-sock
-        mountPath: /var/run/docker.sock
-    resources:
-      requests:
-        cpu: "100m"
-        memory: "128Mi"
-        ephemeral-storage: "512Mi"
-      limits:
-        cpu: "300m"
-        memory: "256Mi"
-        ephemeral-storage: "1Gi"
+    - name: shared
+      mountPath: /jenkins-agent
+    - name: harbor-secret
+      mountPath: /root/.docker
   volumes:
-  - name: docker-sock
-    hostPath:
-      path: /var/run/docker.sock
+  - name: shared
+    emptyDir: {}
+  - name: harbor-secret
+    secret: 
+      secretName: harbor-registry
+      items:
+      - key: .dockerconfigjson
+        path: config.json
 """
   // ------------------- Prep on a controller/agent -------------------
   node('master') { // change label as needed
@@ -142,23 +167,23 @@ spec:
         }
       }
       stage('Build Docker Image') {
-        container('docker') {
-          sh 'docker build  -t harbor.phurithat.site/boardgame_1/boardgame:latest .'
-        }
+            container('buildkit') {
+             sh """
+             buildctl \
+      --addr tcp://buildkit-buildkit-service.buildkit.svc.cluster.local:1234 \
+      build \
+      --frontend dockerfile.v0 \
+      --local context=. \
+      --local dockerfile=. \
+      --output type=image,name=harbor.phurithat.site/boardgame_1/boardgame:latest,push=true,registry.config=/root/.docker/config.json \
+      --export-cache type=inline \
+      --import-cache type=registry,ref=harbor.phurithat.site/boardgame_1/boardgame:latest
+      """
+            }
       }
       stage('Image Scan') {
         container('trivy') {
           sh  'trivy image --severity HIGH,CRITICAL harbor.phurithat.site/boardgame_1/boardgame:latest'
-        }
-      }
-      stage('Push Docker Image to Harbor') {
-        container('docker') {
-          withCredentials([usernamePassword(credentialsId: 'harbor_cred', usernameVariable: 'H_USER', passwordVariable: 'H_PASS')]) {
-            sh '''
-            docker login harbor.phurithat.site -u $H_USER -p $H_PASS
-            docker push harbor.phurithat.site/boardgame_1/boardgame:latest
-        '''
-          }
         }
       }
       stage('Deploy') {
