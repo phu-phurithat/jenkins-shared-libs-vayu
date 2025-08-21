@@ -116,50 +116,47 @@ spec:
         git url: 'https://github.com/phu-phurithat/Boardgame.git', branch: 'main'
       }
       stage('Compile&Scan source code') {
-                  container('maven') {
-                withCredentials([string(credentialsId: 'java_sonar', variable: 'JAVA_TOKEN')]) {
-                    def SONAR_HOST = 'http://sonarqube-sonarqube.sonarqube.svc.cluster.local:9000'
-                    def SONAR_PROJECT_KEY = 'java'
-                    sh """
-                    mvn clean install verify sonar:sonar \
-                    -Dsonar.host.url=${SONAR_HOST} \
-                    -Dsonar.login=${JAVA_TOKEN} \
-                    -Dsonar.projectKey=${SONAR_PROJECT_KEY}
-   
-                    """
-                }
-            }
-            }
+        container('maven') {
+          withCredentials([string(credentialsId: 'java_sonar', variable: 'JAVA_TOKEN')]) {
+            def SONAR_HOST = 'http://sonarqube-sonarqube.sonarqube.svc.cluster.local:9000'
+            def SONAR_PROJECT_KEY = 'java'
+            sh """
+                  mvn clean install verify sonar:sonar \
+                  -Dsonar.host.url=${SONAR_HOST} \
+                  -Dsonar.login=${JAVA_TOKEN} \
+                  -Dsonar.projectKey=${SONAR_PROJECT_KEY}
+                  """
+          }
+        }
       }
       stage('Build Docker Image') {
-              container('docker') {
-                  sh 'docker build  -t harbor.phurithat.site/boardgame_1/boardgame:latest .'
-              }
-          }
-      stage('Security Scan') {
-        container('trivy'){
-              sh  'trivy image --severity HIGH,CRITICAL harbor.phurithat.site/boardgame_1/boardgame:latest'
-            }
+        container('docker') {
+          sh 'docker build  -t harbor.phurithat.site/boardgame_1/boardgame:latest .'
+        }
       }
-    stage('Push Docker Image to Harbor'){
-            container('docker'){
-                withCredentials([usernamePassword(credentialsId: 'harbor_cred', usernameVariable: 'H_USER', passwordVariable: 'H_PASS')]) {
-        sh '''
+      stage('Security Scan') {
+        container('trivy') {
+          sh  'trivy image --severity HIGH,CRITICAL harbor.phurithat.site/boardgame_1/boardgame:latest'
+        }
+      }
+      stage('Push Docker Image to Harbor') {
+        container('docker') {
+          withCredentials([usernamePassword(credentialsId: 'harbor_cred', usernameVariable: 'H_USER', passwordVariable: 'H_PASS')]) {
+            sh '''
             docker login harbor.phurithat.site -u $H_USER -p $H_PASS
             docker push harbor.phurithat.site/boardgame_1/boardgame:latest
         '''
+          }
         }
-            }
-                
-       }
+      }
       stage('Deploy') {
         container('kubectl') {
           echo 'Deploying application to Kubernetes...'
           def kubeconfigFile = "${env.WORKSPACE}/kubeconfig"
           withCredentials([file(credentialsId: 'boardgame-kubeconfig', variable: 'KUBECONFIG_FILE')])  {
             sh '''
-            kubectl --kubeconfig=${KUBECONFIG_FILE} apply -k k8s/
-          '''
+          kubectl --kubeconfig=${KUBECONFIG_FILE} apply -k k8s/
+        '''
           }
         }
       }
