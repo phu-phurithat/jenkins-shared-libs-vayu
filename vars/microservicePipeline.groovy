@@ -134,7 +134,7 @@ spec:
           sh 'docker build  -t harbor.phurithat.site/boardgame_1/boardgame:latest .'
         }
       }
-      stage('Security Scan') {
+      stage('Image Scan') {
         container('trivy') {
           sh  'trivy image --severity HIGH,CRITICAL harbor.phurithat.site/boardgame_1/boardgame:latest'
         }
