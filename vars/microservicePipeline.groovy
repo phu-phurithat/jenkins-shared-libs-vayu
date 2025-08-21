@@ -60,6 +60,18 @@ spec:
     command:
     - cat
     tty: true
+    volumeMounts:
+      - name: docker-sock
+        mountPath: /var/run/docker.sock
+    resources:
+      requests:
+        cpu: "200m"
+        memory: "1Gi"
+        ephemeral-storage: "2Gi"
+      limits:
+        cpu: "500m"
+        memory: "2Gi"
+        ephemeral-storage: "4Gi"
   - name: kubectl
     image: alpine/k8s:1.31.12
     imagePullPolicy: Always
