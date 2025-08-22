@@ -10,6 +10,7 @@ def call(args) {
   final String REGISTRY          = 'harbor.phurithat.site'
   final String REPO              = 'kudesphere'
   final String DOCKER_CONFIG     = '/root/.docker/config.json'
+  final String APP_REPO          = args.DEPLOYMENT_REPO.replace('-helm-charts.git', '-app.git')
 
   // ENV
   env.TRIVY_BASE_URL = 'http://trivy.trivy-system.svc.cluster.local:4954'
@@ -43,7 +44,16 @@ def call(args) {
 
     stage('Read Configuration from /"config.yaml/"') {
       echo 'Getting Configuration'
-      config = prep.getConfig(workspace = env.WORKSPACE, args = args.DEPLOYMENT_REPO)
+      componentName = args.DEPLOYMENT_REPO.tokenize('/').last().replace('-helm-charts.git', '')
+      String configPath = "${env.WORKSPACE}${componentName}/config.yaml"
+      String configContent = readFile(file: configPath, encoding: 'UTF-8')
+
+      if (configContent?.trim()) {
+        config = readYaml(text: configContent)
+      } else {
+        error "Configuration file not found or empty at ${configPath}"
+      }
+      prep.injectConfig(config)
       // credManager.globalENV()
       echo prep.getConfigSummary()
     }

@@ -10,19 +10,9 @@ class Preparer implements Serializable {
     this.args = args ?: [:]
   }
 
-  def getConfig(String workspace,String repo) {
-    componentName = repo.tokenize('/').last().replaceFirst(~/\.git$/, '')
-
-    String prefix = workspace.endsWith('/') ? workspace : workspace + '/'
-    String configPath = "${prefix}${componentName}/config.yaml"
-
-    String configContent = readFile(file: configPath, encoding: 'UTF-8')
-
-    if (configContent?.trim()) {
-      config = readYaml(text: configContent)
-    } else {
-    }
-    return config
+  def injectConfig(config) {
+    this.config = config
+    return this
   }
 
   def getConfigSummary() {
