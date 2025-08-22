@@ -34,11 +34,9 @@ class Preparer implements Serializable {
   }
 
   def readConfigs(repo) {
-    // Logic to read configurations from the repository
-    // This is a placeholder for actual implementation
     echo "Reading configurations from ${repo}"
     COMPONENT_NAME = repo.tokenize('/').last().replace('.git', '')
-    String configPath = env.WORKSPACE + COMPONENT_NAME '/config.yaml'
+    String configPath = '${env.WORKSPACE}/${COMPONENT_NAME}/config.yaml'
     configContent = readFile(file: 'configPath', encoding: 'UTF-8')
 
     if (configContent) {
@@ -47,7 +45,5 @@ class Preparer implements Serializable {
     } else {
       error "Configuration file not found or empty."
     }
-
-    echo "Configuration: ${config}"
   }
 }
