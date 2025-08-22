@@ -26,6 +26,11 @@ def call(args) {
   env.OCP_NONPROD_AGENT = 'ocp-nonprod-agent'
   env.OCP_PROD_AGENT = 'ocp-prod-agent'
 
+  // Helper classes
+  def pt = new PodTemplate()
+  def prep = new Preparer(args)
+// def credManager = new CredManager(this)
+
   // ------------------- Prep on a controller/agent -------------------
   node('master') { // change label as needed
     // Basic input validation
@@ -33,9 +38,7 @@ def call(args) {
       error 'DEPLOYMENT_REPO is required'
     }
 
-    def prep        = new Preparer(args)
-    // def credManager = new CredManager(this)
-    def pt = new PodTemplate()
+    
     def config      = [:]
 
     stage('Checkout') {
