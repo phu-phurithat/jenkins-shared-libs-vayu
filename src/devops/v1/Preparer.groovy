@@ -18,13 +18,8 @@ class Preparer implements Serializable {
 
   def readConfigs(repo) {
     echo "Reading configurations from ${repo}"
-<<<<<<< HEAD
-    COMPONENT_NAME = repo.tokenize('/').last().replace('.git', '')
-    String configPath = '${env.WORKSPACE}/${COMPONENT_NAME}/config.yaml'
-=======
     componentName = repo.tokenize('/').last().replace('.git', '')
     String configPath = env.WORKSPACE + componentName '/config.yaml'
->>>>>>> 8de7786 (Remove globalENV method and rename COMPONENT_NAME to componentName)
     configContent = readFile(file: 'configPath', encoding: 'UTF-8')
 
     if (configContent) {
