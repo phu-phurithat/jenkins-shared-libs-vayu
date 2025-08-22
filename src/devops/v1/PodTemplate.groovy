@@ -14,11 +14,11 @@ class PodTemplate implements Serializable{
     spec: [
       containers: [],
       volumes: [
-        shared: [
-          name: 'shared',
-          emptyDir: {}
-        ]
+      [
+        name: 'shared',
+        emptyDir: [:]
       ]
+    ]
     ]
   ]
 
