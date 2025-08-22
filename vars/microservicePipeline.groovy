@@ -35,7 +35,7 @@ def call(args) {
 
     def prep        = new Preparer(args)
     // def credManager = new CredManager(this)
-    def podTemplate = new PodTemplate()
+    def pt = new PodTemplate()
     def config      = [:]
 
     stage('Checkout') {
@@ -59,12 +59,12 @@ def call(args) {
     }
 
     stage('Prepare Agent') {
-      podTemplate.injectConfig(config)
+      pt.injectConfig(config)
     }
   }
 
   // ------------------- Run inside Kubernetes podTemplate -------------------
-  podTemplate(yaml: podTemplate.toString()) {
+  podTemplate(yaml: pt.toString()) {
     node(POD_LABEL) {
       stage('Checkout') {
         echo 'Checkout code from repository...'
