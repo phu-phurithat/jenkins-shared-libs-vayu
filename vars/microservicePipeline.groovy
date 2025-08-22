@@ -17,7 +17,7 @@ def call(args) {
       error "DEPLOYMENT_REPO is required"
     }
 
-    def prep        = new Preparer(args)
+    def prep        = new Preparer(this,args)
     def credManager = new CredManager()
     def podTemplate = new PodTemplate()
     def config      = [:]
