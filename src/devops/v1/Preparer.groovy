@@ -45,5 +45,6 @@ class Preparer implements Serializable {
     } else {
       error "Configuration file not found or empty."
     }
+    ecgo "Successfully read configuration for ${COMPONENT_NAME}"
   }
 }
