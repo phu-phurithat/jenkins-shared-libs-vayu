@@ -20,11 +20,13 @@ class Preparer implements Serializable {
 ============== Configuration Summary =====================
 
 ------------------- Build Section ------------------------
+
 Component Name: ${componentName}
 Build Tool: ${config.build_tool ?: 'None'}
 Build Image: ${config.build_image ?: 'None'}
 
 -------------------- Security Section --------------------
+
 Code Quality : ${config.security.code ? '✅' : '❌'}
 Secret Scanning : ${config.security.secret ? '✅' : '❌'}
 Dependency Scanning : ${config.security.dependency ? '✅' : '❌'}
