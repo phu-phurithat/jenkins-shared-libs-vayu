@@ -12,7 +12,7 @@ class PodTemplate implements Serializable{
       labels: [ 'jenkins-pod': 'true' ]
     ],
     spec: [
-      containers: []
+      containers: [],
       volumes: [
         shared: [
           name: 'shared',
