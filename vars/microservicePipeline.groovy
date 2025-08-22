@@ -10,25 +10,41 @@ def call(args) {
   final String REGISTRY         = 'harbor.phurithat.site/boardgame_1/boardgame'
   final String DOCKER_CONFIG     = '/root/.docker/config.json'
 
+  // ENV
+  env.TRIVY_BASE_URL = 'http://trivy.trivy-system.svc.cluster.local:4954'
+  env.DEFECTDOJO_BASE_URL = 'http://defectdojo-django.defectdojo.svc.cluster.local'
+  env.DOJO_KEY = 'defect-dojo-key'
+  env.HARBOR_CRED = 'harbor-cred'
+  env.JENKINS_CRED = 'jenkins-cred'
+  env.GITLAB_NONPROD_KEY = 'gitlab-nonprod-key'
+  env.GITLAB_PROD_KEY = 'gitlab-prod-key'
+  env.HELM_PATH = 'vayu-helm'
+  env.HELM_NONPROD_REPO = 'https://gitlab.devopsnonprd.vayuktbcs/api/v4/projects/7410/packages/helm/stable'
+  env.OCP_NONPROD_AGENT = 'ocp-nonprod-agent'
+  env.OCP_PROD_AGENT = 'ocp-prod-agent'
+
   // ------------------- Prep on a controller/agent -------------------
   node('master') { // change label as needed
     // Basic input validation
     if (!args?.DEPLOYMENT_REPO) {
-      error "DEPLOYMENT_REPO is required"
+      error 'DEPLOYMENT_REPO is required'
     }
 
-    def prep        = new Preparer(this,args)
-    def credManager = new CredManager()
+    def prep        = new Preparer(args)
+    // def credManager = new CredManager(this)
     def podTemplate = new PodTemplate()
     def config      = [:]
 
     stage('Checkout') {
+      echo 'Checkout code from repository...'
       git url: args.DEPLOYMENT_REPO, branch: 'master'
     }
 
-    stage('Prepare Parameters and Environment Variables') {
+    stage('Read Configuration from /"config.yaml/"') {
+      echo 'Getting Configuration'
       config = prep.getConfig(args.DEPLOYMENT_REPO)
-      credManager.globalENV()
+      // credManager.globalENV()
+      echo prep.getConfigSummary()
     }
 
     stage('Prepare Agent') {
@@ -39,7 +55,6 @@ def call(args) {
   // ------------------- Run inside Kubernetes podTemplate -------------------
   podTemplate(yaml: podTemplate.toString()) {
     node(POD_LABEL) {
-
       stage('Checkout') {
         echo 'Checkout code from repository...'
         String appRepo = args.DEPLOYMENT_REPO.replace('-helm-charts.git', '-app.git')
@@ -60,7 +75,7 @@ def call(args) {
       }
 
       stage('Build Docker Image') {
-        String imageTag = "latest"
+        String imageTag = 'latest'
         container('buildkit') {
           sh """
             buildctl \
