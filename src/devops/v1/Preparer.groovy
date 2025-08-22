@@ -5,11 +5,9 @@ class Preparer implements Serializable {
   def config
   String componentName
   Map args = [:]
-  def steps
 
-  Preparer(steps, args) {
+  Preparer(args) {
     this.args = args ?: [:]
-    this.steps = steps
   }
 
   def getConfig(String repo) {
