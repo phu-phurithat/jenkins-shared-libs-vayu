@@ -2,19 +2,20 @@ package devops.v1
 
 class Preparer implements Serializable {
 
-  private static final long serialVersionUID = 1L
 
   def config
   String componentName
   Map args = [:]
+  def steps
 
-  Preparer(Map args = [:]) {
+  Preparer(steps, args) {
     this.args = args ?: [:]
+    this.steps = steps
     if (!this.args.DEPLOYMENT_REPO) {
       error "Deployment repository is not provided."
     }
     if (!this.args.TRIGGER_TOKEN) {
-      echo "Trigger token is not provided, using default."
+      steps.echo "Trigger token is not provided, using default."
     }
   }
 
@@ -23,7 +24,7 @@ class Preparer implements Serializable {
       error "Repository is not provided."
     }
 
-    echo "Reading configurations from ${repo}"
+    steps.echo "Reading configurations from ${repo}"
     componentName = repo.tokenize('/').last().replaceFirst(~/\.git$/, '')
 
     String workspace = env.WORKSPACE ?: ''
@@ -34,12 +35,12 @@ class Preparer implements Serializable {
 
     if (configContent?.trim()) {
       config = readYaml(text: configContent)
-      echo "Configuration loaded for component: ${componentName}"
+      steps.echo "Configuration loaded for component: ${componentName}"
     } else {
       error "Configuration file not found or empty."
     }
 
-    echo "Successfully read configuration for ${componentName}"
+    steps.echo "Successfully read configuration for ${componentName}"
     return config
   }
 }
