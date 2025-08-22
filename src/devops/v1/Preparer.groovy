@@ -28,9 +28,6 @@ class Preparer implements Serializable {
     if (!this.args.TRIGGER_TOKEN) {
       echo "Trigger token is not provided, using default."
     }
-
-    readConfigs(args.DEPLOYMENT_REPO)
-
   }
 
   def readConfigs(repo) {
