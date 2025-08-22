@@ -1,9 +1,9 @@
-package devops.v1;
+package devops.v1
 
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.DumperOptions
 
-class PodTemplate implements Serializable{
+class PodTemplate implements Serializable {
 
   def base = [
     apiVersion: 'v1',
@@ -23,7 +23,6 @@ class PodTemplate implements Serializable{
   ]
 
   PodTemplate injectConfig(config) {
-
     // Build tool container
     String tool = (config.build_tool ?: '').toString().toLowerCase()
     switch (tool) {
@@ -104,7 +103,7 @@ class PodTemplate implements Serializable{
     return this
   }
 
-  PodTemplate addTrivy(){
+  PodTemplate addTrivy() {
     addContainerIfMissing([
       name           : 'trivy',
       image          : 'aquasec/trivy:0.54.1',
@@ -188,6 +187,24 @@ class PodTemplate implements Serializable{
     return this
   }
 
+  PodTemplate addGitLeaks() {
+    addContainerIfMissing([
+      name           : 'gitleaks',
+      image          : 'zricethezav/gitleaks:8.18.4',   // pick a stable tag
+      imagePullPolicy: 'Always',
+      command        : ['cat'],  // keep alive until Jenkins runs inside container
+      tty            : true,
+      resources      : [
+        requests: [ cpu: '200m', memory: '512Mi', 'ephemeral-storage': '512Mi' ],
+        limits  : [ cpu: '500m', memory: '1Gi',  'ephemeral-storage': '1Gi' ]
+      ],
+      volumeMounts   : [
+        [ name: 'shared', mountPath: '/jenkins-agent' ] // optional shared workspace
+      ]
+    ])
+    return this
+  }
+
   String toString() {
     def options = new DumperOptions()
     options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK)
@@ -200,13 +217,13 @@ class PodTemplate implements Serializable{
     List<Map> containers = base.spec.containers as List<Map>
     if (!containers.any { it.name == c.name }) {
       containers << c
-    }
   }
+}
   private void addVolumeIfMissing(Map v) {
     List<Map> vols = base.spec.volumes as List<Map>
     if (!vols.any { it.name == v.name }) {
       vols << v
-    }
+  }
   }
 
 }
