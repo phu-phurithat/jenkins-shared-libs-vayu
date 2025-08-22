@@ -43,7 +43,7 @@ def call(args) {
 
     stage('Read Configuration from /"config.yaml/"') {
       echo 'Getting Configuration'
-      config = prep.getConfig(args.DEPLOYMENT_REPO)
+      config = prep.getConfig(workspace = env.WORKSPACE, args = args.DEPLOYMENT_REPO)
       // credManager.globalENV()
       echo prep.getConfigSummary()
     }
@@ -76,7 +76,6 @@ def call(args) {
       // }
 
       stage('Build Docker Image') {
-
         String imageTag = 'latest'
         container('buildkit') {
           sh """
@@ -102,14 +101,14 @@ registry.config=${DOCKER_CONFIG} \
         }
       }
 
-      // stage('Deploy') {
-      //   container('kubectl') {
-      //     echo 'Deploying application to Kubernetes...'
-      //     withCredentials([file(credentialsId: 'boardgame-kubeconfig', variable: 'KUBECONFIG_FILE')]) {
-      //       sh 'kubectl --kubeconfig=${KUBECONFIG_FILE} apply -k k8s/'
-      //     }
-      //   }
-      // }
+    // stage('Deploy') {
+    //   container('kubectl') {
+    //     echo 'Deploying application to Kubernetes...'
+    //     withCredentials([file(credentialsId: 'boardgame-kubeconfig', variable: 'KUBECONFIG_FILE')]) {
+    //       sh 'kubectl --kubeconfig=${KUBECONFIG_FILE} apply -k k8s/'
+    //     }
+    //   }
+    // }
     }
   }
 }

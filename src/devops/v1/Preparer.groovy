@@ -10,10 +10,9 @@ class Preparer implements Serializable {
     this.args = args ?: [:]
   }
 
-  def getConfig(String repo) {
+  def getConfig(String workspace,String repo) {
     componentName = repo.tokenize('/').last().replaceFirst(~/\.git$/, '')
 
-    String workspace = env.WORKSPACE ?: ''
     String prefix = workspace.endsWith('/') ? workspace : workspace + '/'
     String configPath = "${prefix}${componentName}/config.yaml"
 
