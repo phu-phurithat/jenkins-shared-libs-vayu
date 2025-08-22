@@ -2,7 +2,6 @@ package devops.v1
 
 class Preparer implements Serializable {
 
-
   def config
   String componentName
   Map args = [:]
@@ -11,20 +10,9 @@ class Preparer implements Serializable {
   Preparer(steps, args) {
     this.args = args ?: [:]
     this.steps = steps
-    if (!this.args.DEPLOYMENT_REPO) {
-      error "Deployment repository is not provided."
-    }
-    if (!this.args.TRIGGER_TOKEN) {
-      steps.echo "Trigger token is not provided, using default."
-    }
   }
 
   def getConfig(String repo) {
-    if (!repo) {
-      error "Repository is not provided."
-    }
-
-    steps.echo "Reading configurations from ${repo}"
     componentName = repo.tokenize('/').last().replaceFirst(~/\.git$/, '')
 
     String workspace = env.WORKSPACE ?: ''
@@ -35,12 +23,33 @@ class Preparer implements Serializable {
 
     if (configContent?.trim()) {
       config = readYaml(text: configContent)
-      steps.echo "Configuration loaded for component: ${componentName}"
     } else {
-      error "Configuration file not found or empty."
     }
-
-    steps.echo "Successfully read configuration for ${componentName}"
     return config
   }
+
+  def getConfigSummary() {
+    return """
+============== Configuration Summary =====================
+
+------------------- Build Section ------------------------
+Component Name: ${componentName}
+Build Tool: ${config.build_tool ?: 'None'}
+Build Image: ${config.build_image ?: 'None'}
+
+-------------------- Security Section --------------------
+Code Quality : ${config.security.code ? '✅' : '❌'}
+Secret Scanning : ${config.security.secret ? '✅' : '❌'}
+Dependency Scanning : ${config.security.dependency ? '✅' : '❌'}
+Image Scanning : ${config.security.image ? '✅' : '❌'}
+End Of Life Scanning : ${config.security.eol ? '✅' : '❌'}
+DAST Scanning : ${config.security.dast ? '✅' : '❌'}
+
+------------------- Deployment Section --------------------
+...
+
+===========================================================
+"""
+  }
+
 }
