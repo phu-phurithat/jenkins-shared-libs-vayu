@@ -16,7 +16,7 @@ class Preparer implements Serializable {
     }
   }
 
-  def readConfigs(repo) {
+  def getConfig(repo) {
     echo "Reading configurations from ${repo}"
     componentName = repo.tokenize('/').last().replace('.git', '')
     String configPath = env.WORKSPACE + componentName '/config.yaml'
@@ -29,5 +29,6 @@ class Preparer implements Serializable {
       error "Configuration file not found or empty."
     }
     ecgo "Successfully read configuration for ${COMPONENT_NAME}"
+    return config
   }
 }
