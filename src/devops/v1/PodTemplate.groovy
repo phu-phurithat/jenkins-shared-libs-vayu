@@ -13,7 +13,6 @@ class PodTemplate implements Serializable{
     ],
     spec: [
       containers: []
-      ]
       volumes: [
         shared: [
           name: 'shared',
@@ -21,6 +20,7 @@ class PodTemplate implements Serializable{
         ]
       ]
     ]
+  ]
 
   PodTemplate injectConfig(config) {
 
