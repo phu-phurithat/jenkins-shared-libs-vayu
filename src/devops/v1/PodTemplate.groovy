@@ -53,6 +53,11 @@ class PodTemplate implements Serializable {
       addGitLeaks()
     }
     return this
+
+    if (config.auto_deploy in [true, 'true']) {
+      addKubectl()
+      addHelm()
+    }
   }
 
   PodTemplate addMaven() {
@@ -190,7 +195,7 @@ class PodTemplate implements Serializable {
   PodTemplate addGitLeaks() {
     addContainerIfMissing([
       name           : 'gitleaks',
-      image          : 'zricethezav/gitleaks:8.18.4',   // pick a stable tag
+      image          : 'zricethezav/gitleaks:v8.28.0',   // pick a stable tag
       imagePullPolicy: 'Always',
       command        : ['cat'],  // keep alive until Jenkins runs inside container
       tty            : true,
