@@ -35,7 +35,7 @@ End Of Life Scanning : ${config.security.eol ? '✅' : '❌'}
 DAST Scanning : ${config.security.dast ? '✅' : '❌'}
 
 ------------------- Deployment Section --------------------
-...
+Auto Deploy : ${config.auto_deploy ? '✅' : '❌'}
 
 ===========================================================
 """
