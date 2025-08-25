@@ -67,10 +67,10 @@ class PodTemplate implements Serializable {
       imagePullPolicy: 'Always',
       command        : ['cat'],
       tty            : true,
-      resources      : [
-        requests: ['ephemeral-storage': '512Mi'],
-        limits  : ['ephemeral-storage': '1Gi']
-      ]
+      // resources      : [
+      //   requests: ['ephemeral-storage': '512Mi'],
+      //   limits  : ['ephemeral-storage': '1Gi']
+      // ]
     ])
     return this
   }
