@@ -73,7 +73,7 @@ def call(args) {
       stage('Checkout') {
         echo 'Checkout code from repository...'
         String appRepo = args.DEPLOYMENT_REPO.replace('-helm-charts.git', '-app.git')
-        git url: appRepo, branch: 'master'
+        git url: appRepo, branch: 'main'
       }
 
        stage('Compile&Scan source code') {
