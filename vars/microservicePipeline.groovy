@@ -104,7 +104,7 @@ def call(args) {
               --local context=. \
               --local dockerfile=. \
               --output type=image,\
-name=${REGISTRY}/${REPO}/${componentName}:${imageTag},\
+name=${REGISTRY}/${REPO}/${COMPONENT_NAME}:${imageTag},\
 push=true,\
 registry.config=${DOCKER_CONFIG} \
               --export-cache type=inline \
