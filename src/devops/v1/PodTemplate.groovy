@@ -17,13 +17,13 @@ class PodTemplate implements Serializable {
       [
         name: 'shared',
         emptyDir: [:]
-      ],
+      ]],
       securityContext: [
         privileged: true
       ]
 
-    ]
-    ]
+   
+    
   ]
 
   PodTemplate injectConfig(config) {
@@ -64,7 +64,7 @@ class PodTemplate implements Serializable {
     }
   }
 
-  PodTemplate addMaven() {
+  PodTe ]mplate addMaven() {
     addContainerIfMissing([
       name           : 'maven',
       image          : 'maven:3.9.8-eclipse-temurin-17',
