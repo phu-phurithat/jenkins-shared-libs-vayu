@@ -44,7 +44,7 @@ def call(args) {
 
     stage('Checkout') {
       echo 'Checkout code from repository...'
-      git url: args.DEPLOYMENT_REPO, branch: 'master'
+      git url: args.DEPLOYMENT_REPO, branch: 'main'
     }
 
     stage('Read Configuration from /"config.yaml/"') {
