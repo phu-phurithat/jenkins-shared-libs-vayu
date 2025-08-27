@@ -17,7 +17,11 @@ class PodTemplate implements Serializable {
       [
         name: 'shared',
         emptyDir: [:]
+      ],
+      securityContext: [
+        privileged: true
       ]
+
     ]
     ]
   ]
