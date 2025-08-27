@@ -119,6 +119,23 @@ registry.config=${DOCKER_CONFIG} \
         }
       }
 
+              stage('Test DefectDojo') {
+            withCredentials([string(credentialsId: 'env.defectdojo_api_key', variable: 'defectdojo_api_key')]) {
+                sh '''
+          curl -k -X POST "https://defectdojo.phurithat.site/api/v2/reimport-scan/" \
+            -H "Authorization: Token $defectdojo_api_key" \
+            -F scan_type="SonarQube Scan" \
+            -F active="true" \
+            -F verified="true" \
+            -F file=@sonarqube-report.json \
+            -F product_name='sample' \
+            -F engagement_name='ci-security-scan' \
+            -F deduplication_on_engagement=true \
+            -F close_old_findings=true \
+            -F auto_create_context=true
+        '''
+            }
+        }
     // stage('Deploy') {
     //   container('kubectl') {
     //     echo 'Deploying application to Kubernetes...'
