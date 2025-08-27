@@ -168,7 +168,7 @@ class PodTemplate implements Serializable {
   PodTemplate addBuildkit() {
     addContainerIfMissing([
       name           : 'buildkit',
-      image          : 'moby/buildkit:v0.23.0',
+      image          : 'moby/buildkit:latest',
       command        : ['cat'],
       tty            : true,
       securityContext: [ privileged: true ],
