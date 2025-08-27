@@ -16,7 +16,8 @@ def call(args) {
   // ENV
   env.TRIVY_BASE_URL = 'http://trivy.trivy-system.svc.cluster.local:4954'
   env.DEFECTDOJO_BASE_URL = 'http://defectdojo-django.defectdojo.svc.cluster.local'
-  env.DOJO_KEY = 'defect-dojo-key'
+  env.DOJO_KEY = 'defectdojo_api_key'
+  env.SONAR_TOKEN =  'sonar_token'
   env.HARBOR_CRED = 'harbor-cred'
   env.JENKINS_CRED = 'jenkins-cred'
   env.GITLAB_NONPROD_KEY = 'gitlab-nonprod-key'
@@ -75,18 +76,22 @@ def call(args) {
         git url: appRepo, branch: 'master'
       }
 
-      // stage('Compile&Scan source code') {
-      //   container('maven') {
-      //     withCredentials([string(credentialsId: 'java_sonar', variable: 'JAVA_TOKEN')]) {
-      //       sh """
-      //         mvn clean install verify sonar:sonar \
-      //           -Dsonar.host.url=${SONAR_HOST} \
-      //           -Dsonar.login=${JAVA_TOKEN} \
-      //           -Dsonar.projectKey=${SONAR_PROJECT_KEY}
-      //       """
-      //     }
-      //   }
-      // }
+       stage('Compile&Scan source code') {
+         container('maven') {
+           withCredentials([string(credentialsId: 'env.SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
+             sh """
+               mvn clean install verify sonar:sonar \
+                 -Dsonar.host.url=${SONAR_HOST} \
+                 -Dsonar.login=${SONAR_TOKEN} \
+                 -Dsonar.projectKey=${SONAR_PROJECT_KEY}
+
+              curl -s -u "${SONAR_TOKEN}:" \
+                       "${SONAR_HOST}/api/issues/search?projectKey=${SONAR_PROJECT_KEY}" \
+                       -o sonarqube-report.json
+             """
+           }
+         }
+       }
 
       stage('Build Docker Image') {
         String imageTag = 'latest'
