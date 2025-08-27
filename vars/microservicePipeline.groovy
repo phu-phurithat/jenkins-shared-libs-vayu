@@ -78,7 +78,7 @@ def call(args) {
 
        stage('Compile&Scan source code') {
          container('maven') {
-           withCredentials([string(credentialsId: 'env.SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
+           withCredentials([string(credentialsId: env.SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
              sh """
                mvn clean install verify sonar:sonar \
                  -Dsonar.host.url=${SONAR_HOST} \
