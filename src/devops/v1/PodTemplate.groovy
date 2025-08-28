@@ -119,7 +119,7 @@ class PodTemplate implements Serializable {
       ],
       resources      : [
         requests: [  'ephemeral-storage': '2Gi' ],
-        limits  : [  'ephemeral-storage': '3Gi' ]
+        limits  : [  'ephemeral-storage': '4Gi' ]
       ]
     ])
     addHarborSecretVolume()
