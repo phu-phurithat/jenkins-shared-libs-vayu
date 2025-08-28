@@ -12,7 +12,7 @@ def call(args) {
   final String REPO              = 'boardgame_1'
   final String APP_REPO          = args.DEPLOYMENT_REPO.replace('-helm-charts.git', '-app.git')
   final String COMPONENT_NAME    = args.DEPLOYMENT_REPO.tokenize('/').last().replace('-helm-charts.git', '')
-  final String IMAGE_TAG         = "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}"
+  final String IMAGE_TAG         = ${env.BUILD_ID}
 
   // ENV
   env.TRIVY_BASE_URL = 'http://trivy.trivy-system.svc.cluster.local:4954'
@@ -119,12 +119,13 @@ registry.config=${DOCKER_CONFIG} \
         }
       }
 
-              stage('Test DefectDojo') {
+              stage('Import report') {
             withCredentials([string(credentialsId: env.DOJO_KEY, variable: 'defectdojo_api_key')]) {
                 sh '''
           curl -k -X POST "https://defectdojo.phurithat.site/api/v2/reimport-scan/" \
             -H "Authorization: Token $defectdojo_api_key" \
             -F scan_type="SonarQube Scan" \
+            -F test_title="SonarQube Scan Source Code" \
             -F active="true" \
             -F verified="true" \
             -F file=@sonarqube-report.json \
