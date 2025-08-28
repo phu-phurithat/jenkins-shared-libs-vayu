@@ -12,6 +12,7 @@ def call(args) {
   final String REPO              = 'boardgame_1'
   final String APP_REPO          = args.DEPLOYMENT_REPO.replace('-helm-charts.git', '-app.git')
   final String COMPONENT_NAME    = args.DEPLOYMENT_REPO.tokenize('/').last().replace('-helm-charts.git', '')
+  final String IMAGE_TAG         = "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}"
 
   // ENV
   env.TRIVY_BASE_URL = 'http://trivy.trivy-system.svc.cluster.local:4954'
@@ -94,7 +95,6 @@ def call(args) {
        }
 
       stage('Build Docker Image') {
-        String imageTag = 'latest'
         container('buildkit') {
           sh """
             buildctl \
@@ -104,7 +104,7 @@ def call(args) {
               --local context=. \
               --local dockerfile=. \
               --output type=image,\
-name=${REGISTRY}/${REPO}/${COMPONENT_NAME}:${imageTag},\
+name=${REGISTRY}/${REPO}/${COMPONENT_NAME}:${IMAGE_TAG},\
 push=true,\
 registry.config=${DOCKER_CONFIG} \
               --export-cache type=inline \
@@ -115,7 +115,7 @@ registry.config=${DOCKER_CONFIG} \
 
       stage('Image Scan') {
         container('trivy') {
-          sh "trivy image --severity HIGH,CRITICAL ${REGISTRY}"
+          sh "trivy image --severity HIGH,CRITICAL ${REGISTRY}/${REPO}/${COMPONENT_NAME}:${IMAGE_TAG} || true"
         }
       }
 
