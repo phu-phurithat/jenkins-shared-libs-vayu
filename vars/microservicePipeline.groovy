@@ -15,7 +15,7 @@ def call(args) {
   final String IMAGE_TAG         = env.BUILD_ID
 
   // ENV
-  env.TRIVY_BASE_URL = 'http://trivy.trivy-system.svc.cluster.local:4954'
+  env.TRIVY_BASE_URL = 'http://trivy.trivy.svc.cluster.local:4954'
   env.DEFECTDOJO_BASE_URL = 'http://defectdojo-django.defectdojo.svc.cluster.local'
   env.DOJO_KEY = 'defectdojo_api_key'
   env.SONAR_TOKEN =  'sonar_token'
@@ -112,7 +112,18 @@ registry.config=${DOCKER_CONFIG} \
           """
         }
       }
-
+      stage('Dependencies Scan'){
+        container('trivy'){
+          sh '''
+            trivy fs . \\
+                        --server ${env.TRIVY_BASE_URL} \\
+                        --scanners vuln \\
+                        --offline-scan \\
+                        --format cyclonedx \\
+                        -o trivy_vuln.json
+            '''
+        }
+      }
       stage('Image Scan') {
         container('trivy') {
           sh "trivy image --severity HIGH,CRITICAL ${REGISTRY}/${REPO}/${COMPONENT_NAME}:${IMAGE_TAG} || true"
