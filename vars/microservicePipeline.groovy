@@ -120,7 +120,7 @@ registry.config=${DOCKER_CONFIG} \
       }
 
               stage('Test DefectDojo') {
-            withCredentials([string(credentialsId: 'env.defectdojo_api_key', variable: 'defectdojo_api_key')]) {
+            withCredentials([string(credentialsId: env.DOJO_KEY, variable: 'defectdojo_api_key')]) {
                 sh '''
           curl -k -X POST "https://defectdojo.phurithat.site/api/v2/reimport-scan/" \
             -H "Authorization: Token $defectdojo_api_key" \
