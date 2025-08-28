@@ -12,7 +12,7 @@ def call(args) {
   final String REPO              = 'boardgame_1'
   final String APP_REPO          = args.DEPLOYMENT_REPO.replace('-helm-charts.git', '-app.git')
   final String COMPONENT_NAME    = args.DEPLOYMENT_REPO.tokenize('/').last().replace('-helm-charts.git', '')
-  final String IMAGE_TAG         = ${env.BUILD_ID}
+  final String IMAGE_TAG         = env.BUILD_ID
 
   // ENV
   env.TRIVY_BASE_URL = 'http://trivy.trivy-system.svc.cluster.local:4954'
