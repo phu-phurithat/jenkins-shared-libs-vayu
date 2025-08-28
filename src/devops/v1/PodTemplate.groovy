@@ -21,11 +21,8 @@ class PodTemplate implements Serializable {
       securityContext: [
         privileged: true
       ]
-
-   
-    
   ]
-
+  ]
   PodTemplate injectConfig(config) {
     // Build tool container
     String tool = (config.build_tool ?: '').toString().toLowerCase()
@@ -64,7 +61,7 @@ class PodTemplate implements Serializable {
     }
   }
 
-  PodTe ]mplate addMaven() {
+  PodTemplate addMaven() {
     addContainerIfMissing([
       name           : 'maven',
       image          : 'maven:3.9.8-eclipse-temurin-17',
