@@ -18,10 +18,6 @@ class PodTemplate implements Serializable {
         name: 'shared',
         emptyDir: [:]
       ]]
-      // ,securityContext: [
-      //   privileged: true
-      // ] 
-
   ]
   ]
   PodTemplate injectConfig(config) {
@@ -121,10 +117,10 @@ class PodTemplate implements Serializable {
         [ name: 'shared',        mountPath: '/jenkins-agent' ],
         [ name: 'harbor-secret', mountPath: '/root/.docker' ]
       ],
-      // resources      : [
-      //   requests: [ cpu: '200m', memory: '1Gi', 'ephemeral-storage': '2Gi' ],
-      //   limits  : [ cpu: '500m', memory: '2Gi', 'ephemeral-storage': '4Gi' ]
-      // ]
+      resources      : [
+        requests: [  'ephemeral-storage': '2Gi' ],
+        limits  : [  'ephemeral-storage': '3Gi' ]
+      ]
     ])
     addHarborSecretVolume()
     return this
