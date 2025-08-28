@@ -9,7 +9,7 @@ def call(args) {
   final String BUILDKIT_ADDR     = 'tcp://buildkit-buildkit-service.buildkit.svc.cluster.local:1234'
   final String REGISTRY          = 'harbor.phurithat.site'
   final String DOCKER_CONFIG     = '/root/.docker/config.json'
-  final String REPO              = 'boradgame_1'
+  final String REPO              = 'boardgame_1'
   final String APP_REPO          = args.DEPLOYMENT_REPO.replace('-helm-charts.git', '-app.git')
   final String COMPONENT_NAME    = args.DEPLOYMENT_REPO.tokenize('/').last().replace('-helm-charts.git', '')
 
