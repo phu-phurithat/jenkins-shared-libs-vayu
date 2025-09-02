@@ -77,108 +77,107 @@ def call(args) {
         git url: appRepo, branch: 'main'
       }
 
-       stage('Compile&Scan source code') {
-         container('maven') {
-           withCredentials([string(credentialsId: env.SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
-             sh """
-               mvn clean install verify sonar:sonar \
-                 -Dsonar.host.url=${SONAR_HOST} \
-                 -Dsonar.login=${SONAR_TOKEN} \
-                 -Dsonar.projectKey=${SONAR_PROJECT_KEY}
+ stage('Compile&Scan source code') {
+  container('maven') {
+    withCredentials([string(credentialsId: env.SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
+      sh '''
+        mvn clean install verify sonar:sonar \
+          -Dsonar.host.url=$SONAR_HOST \
+          -Dsonar.login=$SONAR_TOKEN \
+          -Dsonar.projectKey=$SONAR_PROJECT_KEY
 
-              curl -s -u "${SONAR_TOKEN}:" \
-                       "${SONAR_HOST}/api/issues/search?projectKey=${SONAR_PROJECT_KEY}" \
-                       -o sonarqube-report.json
-             """
-           }
-         }
-       }
+        curl -s -u "$SONAR_TOKEN:" \
+             "$SONAR_HOST/api/issues/search?projectKey=$SONAR_PROJECT_KEY" \
+             -o sonarqube-report.json
+      '''
+    }
+  }
+}
 
-      stage('Build Docker Image') {
-        container('buildkit') {
-          sh """
-            buildctl \
-              --addr ${BUILDKIT_ADDR} \
-              prune \
-              build \
-              --frontend dockerfile.v0 \
-              --local context=. \
-              --local dockerfile=. \
-              --output type=image,\
-name=${REGISTRY}/${REPO}/${COMPONENT_NAME}:${IMAGE_TAG},\
+stage('Build Docker Image') {
+  container('buildkit') {
+    sh '''
+      buildctl \
+        --addr $BUILDKIT_ADDR \
+        prune \
+        build \
+        --frontend dockerfile.v0 \
+        --local context=. \
+        --local dockerfile=. \
+        --output type=image,\
+name=$REGISTRY/$REPO/$COMPONENT_NAME:$IMAGE_TAG,\
 push=true,\
-registry.config=${DOCKER_CONFIG} \
-              --export-cache type=inline \
-              --import-cache type=registry,ref=${REGISTRY}
-          """
-        }
-      }
-      stage('Dependencies Scan'){
-        container('trivy'){ 
-          sh '''
-            trivy fs . \\
-            --server ${env.TRIVY_BASE_URL} \\
-            --scanners vuln \\
-            --offline-scan \\
-            --format cyclonedx \\
-            -o trivy_vuln.json
-                        '''
-        }
-      }
-      stage('Image Scan') {
-        container('trivy') {
-          //sh "trivy image --severity HIGH,CRITICAL ${REGISTRY}/${REPO}/${COMPONENT_NAME}:${IMAGE_TAG} || true"
-          sh """
-              trivy image harbor.phurithat.site/boardgame_1/boardgame:latest \\
-                        --server http://trivy.trivy.svc.cluster.local:4954 \\
-                        --timeout 10m \\
-                        --skip-db-update \\
-                        --severity CRITICAL,HIGH,MEDIUM \\
-                        --ignore-unfixed \\
-                        --scanners vuln \\
-                        --format cyclonedx \\
-                        -o trivy_image.json
+registry.config=$DOCKER_CONFIG \
+        --export-cache type=inline \
+        --import-cache type=registry,ref=$REGISTRY
+    '''
+  }
+}
 
-                        """
-        }
-      }
+stage('Dependencies Scan'){
+  container('trivy'){
+    sh '''
+      trivy fs . \
+        --server $TRIVY_BASE_URL \
+        --scanners vuln \
+        --offline-scan \
+        --format cyclonedx \
+        -o trivy_vuln.json
+    '''
+  }
+}
 
-              stage('Import report') {
-            withCredentials([string(credentialsId: env.DOJO_KEY, variable: 'defectdojo_api_key')]) {
+stage('Image Scan') {
+  container('trivy') {
+    sh '''
+      trivy image $REGISTRY/$REPO/$COMPONENT_NAME:$IMAGE_TAG \
+        --server $TRIVY_BASE_URL \
+        --timeout 10m \
+        --skip-db-update \
+        --severity CRITICAL,HIGH,MEDIUM \
+        --ignore-unfixed \
+        --scanners vuln \
+        --format cyclonedx \
+        -o trivy_image.json
+    '''
+  }
+}
 
-              //SonarQube Scan Source Code
-                sh '''
-              
-          curl -k -X POST "https://defectdojo.phurithat.site/api/v2/reimport-scan/" \
-            -H "Authorization: Token $defectdojo_api_key" \
-            -F scan_type="SonarQube Scan" \
-            -F test_title="SonarQube Scan Source Code" \
-            -F active="true" \
-            -F verified="true" \
-            -F file=@sonarqube-report.json \
-            -F product_name='sample' \
-            -F engagement_name='ci-security-scan' \
-            -F deduplication_on_engagement=true \
-            -F close_old_findings=true \
-            -F auto_create_context=true
-        '''
-            //Trivy Scan Dependency
-        sh '''
-          curl -k -X POST "https://defectdojo.phurithat.site/api/v2/reimport-scan/" \
-            -H "Authorization: Token $defectdojo_api_key" \
-            -F scan_type="Trivy Scan" \
-            -F test_title="Trivy Scan Dependency" \
-            -F active="true" \
-            -F verified="true" \
-            -F file=@trivy_vuln.json \
-            -F product_name='sample' \
-            -F engagement_name='ci-security-scan' \
-            -F deduplication_on_engagement=true \
-            -F close_old_findings=true \
-            -F auto_create_context=true
-        '''
-            }
-        }
+stage('Import report') {
+  withCredentials([string(credentialsId: env.DOJO_KEY, variable: 'defectdojo_api_key')]) {
+    // SonarQube Scan Source Code
+    sh '''
+      curl -k -X POST "https://defectdojo.phurithat.site/api/v2/reimport-scan/" \
+        -H "Authorization: Token $defectdojo_api_key" \
+        -F scan_type="SonarQube Scan" \
+        -F test_title="SonarQube Scan Source Code" \
+        -F active="true" \
+        -F verified="true" \
+        -F file=@sonarqube-report.json \
+        -F product_name="sample" \
+        -F engagement_name="ci-security-scan" \
+        -F deduplication_on_engagement=true \
+        -F close_old_findings=true \
+        -F auto_create_context=true
+    '''
+    // Trivy Scan Dependency
+    sh '''
+      curl -k -X POST "https://defectdojo.phurithat.site/api/v2/reimport-scan/" \
+        -H "Authorization: Token $defectdojo_api_key" \
+        -F scan_type="Trivy Scan" \
+        -F test_title="Trivy Scan Dependency" \
+        -F active="true" \
+        -F verified="true" \
+        -F file=@trivy_vuln.json \
+        -F product_name="sample" \
+        -F engagement_name="ci-security-scan" \
+        -F deduplication_on_engagement=true \
+        -F close_old_findings=true \
+        -F auto_create_context=true
+    '''
+  }
+}
+
     // stage('Deploy') {
     //   container('kubectl') {
     //     echo 'Deploying application to Kubernetes...'
