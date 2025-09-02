@@ -145,7 +145,10 @@ registry.config=${DOCKER_CONFIG} \
 
               stage('Import report') {
             withCredentials([string(credentialsId: env.DOJO_KEY, variable: 'defectdojo_api_key')]) {
+
+              //SonarQube Scan Source Code
                 sh '''
+              
           curl -k -X POST "https://defectdojo.phurithat.site/api/v2/reimport-scan/" \
             -H "Authorization: Token $defectdojo_api_key" \
             -F scan_type="SonarQube Scan" \
@@ -153,6 +156,21 @@ registry.config=${DOCKER_CONFIG} \
             -F active="true" \
             -F verified="true" \
             -F file=@sonarqube-report.json \
+            -F product_name='sample' \
+            -F engagement_name='ci-security-scan' \
+            -F deduplication_on_engagement=true \
+            -F close_old_findings=true \
+            -F auto_create_context=true
+        '''
+            //Trivy Scan Dependency
+        sh '''
+          curl -k -X POST "https://defectdojo.phurithat.site/api/v2/reimport-scan/" \
+            -H "Authorization: Token $defectdojo_api_key" \
+            -F scan_type="Trivy Scan" \
+            -F test_title="Trivy Scan Dependency" \
+            -F active="true" \
+            -F verified="true" \
+            -F file=@trivy_vuln.json \
             -F product_name='sample' \
             -F engagement_name='ci-security-scan' \
             -F deduplication_on_engagement=true \
