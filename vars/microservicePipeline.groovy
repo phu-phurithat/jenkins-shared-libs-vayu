@@ -114,15 +114,15 @@ registry.config=${DOCKER_CONFIG} \
         }
       }
       stage('Dependencies Scan'){
-        container('trivy'){ //ถ้าใช้ sh """ ... """ จะ interpolate ตัวแปร Jenkins ให้อัตโนมัติ
-          sh """
+        container('trivy'){ 
+          sh '''
             trivy fs . \\
-                        --server ${env.TRIVY_BASE_URL} \\
-                        --scanners vuln \\
-                        --offline-scan \\
-                        --format cyclonedx \\
-                        -o trivy_vuln.json
-            """
+            --server ${env.TRIVY_BASE_URL} \\
+            --scanners vuln \\
+            --offline-scan \\
+            --format cyclonedx \\
+            -o trivy_vuln.json
+                        '''
         }
       }
       stage('Image Scan') {
