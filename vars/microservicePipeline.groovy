@@ -82,12 +82,12 @@ def call(args) {
     withCredentials([string(credentialsId: env.SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
       sh '''
         mvn clean install verify sonar:sonar \
-          -Dsonar.host.url=$SONAR_HOST \
-          -Dsonar.login=$SONAR_TOKEN \
-          -Dsonar.projectKey=$SONAR_PROJECT_KEY
+          -Dsonar.host.url=${SONAR_HOST} \
+          -Dsonar.login=${SONAR_TOKEN} \
+          -Dsonar.projectKey=${SONAR_PROJECT_KEY}
 
-        curl -s -u "$SONAR_TOKEN:" \
-             "$SONAR_HOST/api/issues/search?projectKey=$SONAR_PROJECT_KEY" \
+        curl -s -u "${SONAR_TOKEN}:" \
+             "${SONAR_HOST}/api/issues/search?projectKey=${SONAR_PROJECT_KEY}" \
              -o sonarqube-report.json
       '''
     }
