@@ -116,7 +116,7 @@ registry.config=${DOCKER_CONFIG} \
       stage('Dependencies Scan'){
         container('trivy'){ //ถ้าใช้ sh """ ... """ จะ interpolate ตัวแปร Jenkins ให้อัตโนมัติ
           sh """
-            trivy fs . \\   
+            trivy fs . \\
                         --server ${env.TRIVY_BASE_URL} \\
                         --scanners vuln \\
                         --offline-scan \\
