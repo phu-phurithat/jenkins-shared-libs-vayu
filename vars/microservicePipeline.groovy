@@ -100,6 +100,7 @@ def call(args) {
             buildctl \
               --addr ${BUILDKIT_ADDR} \
               build \
+              prune \
               --frontend dockerfile.v0 \
               --local context=. \
               --local dockerfile=. \
