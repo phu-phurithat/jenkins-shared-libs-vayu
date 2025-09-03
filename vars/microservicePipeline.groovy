@@ -17,7 +17,7 @@ def call(args) {
 
   // ENV
   env.TRIVY_BASE_URL = 'http://trivy.trivy.svc.cluster.local:4954'
-  env.DEFECTDOJO_BASE_URL = 'http://defectdojo-django.defectdojo.svc.cluster.local'
+  env.DEFECTDOJO_BASE_URL = 'https://defectdojo.phurithat.site'
   env.DOJO_KEY = 'defectdojo_api_key'
   env.SONAR_TOKEN =  'sonar_token'
   env.HARBOR_CRED = 'harbor-cred'
@@ -130,7 +130,7 @@ registry.config=${DOCKER_CONFIG} \
           //sh "trivy image --severity HIGH,CRITICAL ${REGISTRY}/${REPO}/${COMPONENT_NAME}:${IMAGE_TAG} || true"
           sh """
               trivy image ${FULL_IMAGE} \
-                        --server http://trivy.trivy.svc.cluster.local:4954 \
+                        --server ${env.TRIVY_BASE_URL} \
                         --timeout 10m \
                         --skip-db-update \
                         --severity CRITICAL,HIGH,MEDIUM \
@@ -148,7 +148,7 @@ registry.config=${DOCKER_CONFIG} \
           //SonarQube Scan Source Code
           sh """
 
-          curl -k -X POST "https://defectdojo.phurithat.site/api/v2/reimport-scan/" \
+          curl -k -X POST "${env.DEFECTDOJO_BASE_URL}/api/v2/reimport-scan/" \
             -H "Authorization: Token $defectdojo_api_key" \
             -F scan_type="SonarQube Scan" \
             -F test_title="SonarQube Scan Source Code" \
@@ -165,11 +165,27 @@ registry.config=${DOCKER_CONFIG} \
           sh """
           curl -k -X POST "https://defectdojo.phurithat.site/api/v2/reimport-scan/" \
             -H "Authorization: Token $defectdojo_api_key" \
-            -F scan_type="Trivy Scan" \
-            -F test_title="Trivy Scan Dependency" \
+            -F scan_type="CycloneDX Scan" \
+            -F test_title="CycloneDX Scan Dependency" \
             -F active="true" \
             -F verified="true" \
             -F file=@trivy_vuln.json \
+            -F product_name='sample' \
+            -F engagement_name='ci-security-scan' \
+            -F deduplication_on_engagement=true \
+            -F close_old_findings=true \
+            -F auto_create_context=true
+        """
+
+        //Trivy Scan Image
+        sh """
+          curl -k -X POST "https://defectdojo.phurithat.site/api/v2/reimport-scan/" \
+            -H "Authorization: Token $defectdojo_api_key" \
+            -F scan_type="CycloneDX Scan" \
+            -F test_title="CycloneDX Scan Image" \
+            -F active="true" \
+            -F verified="true" \
+            -F file=@trivy_image.json \
             -F product_name='sample' \
             -F engagement_name='ci-security-scan' \
             -F deduplication_on_engagement=true \
