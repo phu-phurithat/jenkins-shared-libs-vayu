@@ -103,10 +103,7 @@ def call(args) {
               --frontend dockerfile.v0 \
               --local context=. \
               --local dockerfile=. \
-              --output type=image,\
-name=${FULL_IMAGE},\
-push=true,\
-registry.config=${DOCKER_CONFIG} \
+              --output type=image,name=${FULL_IMAGE},push=true,registry.config=${DOCKER_CONFIG} \
               --export-cache type=inline \
               --import-cache type=registry,ref=${REGISTRY}
           """
