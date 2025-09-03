@@ -116,27 +116,27 @@ registry.config=${DOCKER_CONFIG} \
       stage('Dependencies Scan'){
         container('trivy'){ 
           sh '''
-            trivy fs . \\
-            --server ${env.TRIVY_BASE_URL} \\
-            --scanners vuln \\
-            --offline-scan \\
-            --format cyclonedx \\
+            trivy fs . \
+            --server ${env.TRIVY_BASE_URL} \
+            --scanners vuln \
+            --offline-scan \
+            --format cyclonedx \
             -o trivy_vuln.json
-                        '''
+          '''
         }
       }
       stage('Image Scan') {
         container('trivy') {
           //sh "trivy image --severity HIGH,CRITICAL ${REGISTRY}/${REPO}/${COMPONENT_NAME}:${IMAGE_TAG} || true"
           sh """
-              trivy image harbor.phurithat.site/boardgame_1/boardgame:latest \\
-                        --server http://trivy.trivy.svc.cluster.local:4954 \\
-                        --timeout 10m \\
-                        --skip-db-update \\
-                        --severity CRITICAL,HIGH,MEDIUM \\
-                        --ignore-unfixed \\
-                        --scanners vuln \\
-                        --format cyclonedx \\
+              trivy image harbor.phurithat.site/boardgame_1/boardgame:latest \
+                        --server http://trivy.trivy.svc.cluster.local:4954 \
+                        --timeout 10m \
+                        --skip-db-update \
+                        --severity CRITICAL,HIGH,MEDIUM \
+                        --ignore-unfixed \
+                        --scanners vuln \
+                        --format cyclonedx \
                         -o trivy_image.json
 
                         """
