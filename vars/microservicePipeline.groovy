@@ -40,7 +40,6 @@ def call(args) {
       error 'DEPLOYMENT_REPO is required'
     }
 
-    
     def config      = [:]
 
     stage('Checkout') {
@@ -77,10 +76,10 @@ def call(args) {
         git url: appRepo, branch: 'main'
       }
 
-       stage('Compile&Scan source code') {
-         container('maven') {
-           withCredentials([string(credentialsId: env.SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
-             sh """
+      stage('Compile&Scan source code') {
+        container('maven') {
+          withCredentials([string(credentialsId: env.SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
+            sh """
                mvn clean install verify sonar:sonar \
                  -Dsonar.host.url=${SONAR_HOST} \
                  -Dsonar.login=${SONAR_TOKEN} \
@@ -90,9 +89,9 @@ def call(args) {
                        "${SONAR_HOST}/api/issues/search?projectKey=${SONAR_PROJECT_KEY}" \
                        -o sonarqube-report.json
              """
-           }
-         }
-       }
+          }
+        }
+      }
 
       stage('Build Docker Image') {
         container('buildkit') {
@@ -113,16 +112,16 @@ registry.config=${DOCKER_CONFIG} \
           """
         }
       }
-      stage('Dependencies Scan'){
-        container('trivy'){ 
-          sh '''
+      stage('Dependencies Scan') {
+        container('trivy') {
+          sh """
             trivy fs . \
             --server ${env.TRIVY_BASE_URL} \
             --scanners vuln \
             --offline-scan \
             --format cyclonedx \
             -o trivy_vuln.json
-          '''
+          """
         }
       }
       stage('Image Scan') {
@@ -139,16 +138,15 @@ registry.config=${DOCKER_CONFIG} \
                         --format cyclonedx \
                         -o trivy_image.json
 
-                        """
+          """
         }
       }
 
-              stage('Import report') {
+      stage('Import report') {
             withCredentials([string(credentialsId: env.DOJO_KEY, variable: 'defectdojo_api_key')]) {
+          //SonarQube Scan Source Code
+          sh """
 
-              //SonarQube Scan Source Code
-                sh '''
-              
           curl -k -X POST "https://defectdojo.phurithat.site/api/v2/reimport-scan/" \
             -H "Authorization: Token $defectdojo_api_key" \
             -F scan_type="SonarQube Scan" \
@@ -161,9 +159,9 @@ registry.config=${DOCKER_CONFIG} \
             -F deduplication_on_engagement=true \
             -F close_old_findings=true \
             -F auto_create_context=true
-        '''
-            //Trivy Scan Dependency
-        sh '''
+        """
+          //Trivy Scan Dependency
+          sh """
           curl -k -X POST "https://defectdojo.phurithat.site/api/v2/reimport-scan/" \
             -H "Authorization: Token $defectdojo_api_key" \
             -F scan_type="Trivy Scan" \
@@ -176,9 +174,9 @@ registry.config=${DOCKER_CONFIG} \
             -F deduplication_on_engagement=true \
             -F close_old_findings=true \
             -F auto_create_context=true
-        '''
+        """
             }
-        }
+      }
     // stage('Deploy') {
     //   container('kubectl') {
     //     echo 'Deploying application to Kubernetes...'
