@@ -109,7 +109,7 @@ name=${FULL_IMAGE},\
 push=true,\
 registry.config=${DOCKER_CONFIG} \
               --export-cache type=inline \
-              --import-cache type=registry,ref=${REGISTRY}
+              --import-cache type=registry,ref=${FULL_IMAGE}
           """
         }
       }
