@@ -28,7 +28,7 @@ def call(args) {
   env.HELM_NONPROD_REPO = 'https://gitlab.devopsnonprd.vayuktbcs/api/v4/projects/7410/packages/helm/stable'
   env.OCP_NONPROD_AGENT = 'ocp-nonprod-agent'
   env.OCP_PROD_AGENT = 'ocp-prod-agent'
-
+  def config      = [:]
   // Helper classes
   def pt = new PodTemplate()
   def prep = new Preparer(args)
@@ -42,7 +42,7 @@ def call(args) {
       error 'DEPLOYMENT_REPO is required'
     }
 
-    def config      = [:]
+  
 
     stage('Checkout') {
       echo 'Checkout code from repository...'
