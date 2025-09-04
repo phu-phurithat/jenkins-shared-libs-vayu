@@ -78,9 +78,10 @@ def call(args) {
       }
 
       stage('Compile&Scan source code') {
+        withCredentials([string(credentialsId: env.SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
         if(fileExists("pom.xml")){
           container('maven') {
-          withCredentials([string(credentialsId: env.SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
+          
             sh """
                mvn clean install verify sonar:sonar \
                  -Dsonar.host.url=${SONAR_HOST} \
@@ -95,8 +96,10 @@ def call(args) {
         }}else{
           
           if(fileExists("package.json")){
-            container('nodejs') {
-                sh 'npm ci && npm test --coverage'
+            sh '''
+            npm install \
+            npm run test
+            '''
         }
           }
           container('sonarqube'){
