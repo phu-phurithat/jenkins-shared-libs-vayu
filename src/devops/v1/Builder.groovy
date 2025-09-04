@@ -7,11 +7,11 @@ class Builder {
     }
    def credManager = new CredManager()
     
-    def Checkout(repo){
-
-    }
+ 
     def Compile(SONAR_HOST,SONAR_PROJECT_KEY){
-        if(config.build_tool.equalsIgnoreCase("maven")){
+        String build_tool= config.build_tool
+
+        if(build_tool.equalsIgnoreCase("maven")){
             sh """
                mvn clean install verify sonar:sonar \
                  -Dsonar.host.url=${SONAR_HOST} \
