@@ -5,20 +5,12 @@ class Builder {
     def Builder(config){
         this.config = config
     }
+    String language = config.build_tool
    def credManager = new CredManager()
-    
+  
  
-    def Compile(SONAR_HOST,SONAR_PROJECT_KEY){
-        stage('Compile'){
- def build_tool= config.build_tool
-        def language
-        if (build_tool != null) {
-       language = buildTool.toLowerCase()
-       echo "LANGUAGE = ${language}"
-       } else {
-       echo "build_tool is null!"
-          }
-        if(build_tool.equalsIgnoreCase("maven")){
+    def Compile(SONAR_HOST,SONAR_PROJECT_KEY,language){
+        if(language=="maven"){
             sh """
                mvn clean install verify sonar:sonar \
                  -Dsonar.host.url=${SONAR_HOST} \
@@ -38,4 +30,3 @@ class Builder {
         }
        
     }
-}

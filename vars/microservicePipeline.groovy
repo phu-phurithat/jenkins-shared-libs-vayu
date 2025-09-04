@@ -110,14 +110,18 @@ def call(args) {
 
       //   }
      // echo "config lan =${config.build_tool}"
-      def language = config.build_tool.toLowerCase()
+      String language = config.build_tool.toLowerCase()
       echo "LANGUAGE = ${language}"
-      if(language=="maven"){
+
+      stage('Build'){
+        if(language=="maven"){
         container('maven'){
-           builder.Compile(SONAR_HOST,SONAR_PROJECT_KEY)
+           builder.Compile(SONAR_HOST,SONAR_PROJECT_KEY,language)
         }
       }
         
+      }
+      
      
 
       stage('Build Docker Image') {
