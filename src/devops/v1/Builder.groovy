@@ -9,7 +9,8 @@ class Builder {
     
  
     def Compile(SONAR_HOST,SONAR_PROJECT_KEY){
-        def build_tool= config.build_tool
+        stage('Compile'){
+ def build_tool= config.build_tool
         def language
         if (build_tool != null) {
        language = buildTool.toLowerCase()
@@ -32,5 +33,9 @@ class Builder {
         else if(config.build_tool.equalsIgnoreCase("node.js")){
 
         }
+
+
+        }
+       
     }
 }
