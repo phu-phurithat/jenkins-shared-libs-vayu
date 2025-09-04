@@ -9,8 +9,14 @@ class Builder {
     
  
     def Compile(SONAR_HOST,SONAR_PROJECT_KEY){
-        String build_tool= config.build_tool
-
+        def build_tool= config.build_tool
+        def language
+        if (build_tool != null) {
+       language = buildTool.toLowerCase()
+       echo "LANGUAGE = ${language}"
+       } else {
+       echo "build_tool is null!"
+          }
         if(build_tool.equalsIgnoreCase("maven")){
             sh """
                mvn clean install verify sonar:sonar \
