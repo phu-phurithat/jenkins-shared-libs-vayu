@@ -93,7 +93,7 @@ def call(args) {
                        -o sonarqube-report.json
              """
           }
-        }}else{
+        }else{
           
           if(fileExists("package.json")){
             sh '''
@@ -101,13 +101,18 @@ def call(args) {
             npm run test
             '''
         }
-          }
-          container('sonarqube'){
+        container('sonarqube'){
 
           }
+          }
+
+
         }
         
-      }
+          
+        }
+        
+      
 
       stage('Build Docker Image') {
         container('buildkit') {
