@@ -6,7 +6,7 @@ class Builder {
         this.config = config
     }
     String language = config.build_tool
-   def credManager = new CredManager()
+
   
  
     def Compile(SONAR_HOST,SONAR_PROJECT_KEY,language){
@@ -14,10 +14,10 @@ class Builder {
             sh """
                mvn clean install verify sonar:sonar \
                  -Dsonar.host.url=${SONAR_HOST} \
-                 -Dsonar.login=${SONAR_TOKEN} \
+                 -Dsonar.login=${env.SONAR_TOKEN} \
                  -Dsonar.projectKey=${SONAR_PROJECT_KEY}
 
-              curl -s -u "${SONAR_TOKEN}:" \
+              curl -s -u "${env.SONAR_TOKEN}:" \
                        "${SONAR_HOST}/api/issues/search?projectKey=${SONAR_PROJECT_KEY}" \
                        -o sonarqube-report.json
              """
