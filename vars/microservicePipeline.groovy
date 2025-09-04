@@ -10,7 +10,7 @@ def call(args) {
   final String REGISTRY          = 'harbor.phurithat.site'
   final String DOCKER_CONFIG     = '/root/.docker/config.json'
   final String REPO              = 'boardgame_1'
-  final String APP_REPO          = args.DEPLOYMENT_REPO.replace('-helm-charts.git', '-app.git')
+//  final String APP_REPO          = args.DEPLOYMENT_REPO.replace('-helm-charts.git', '-app.git')
   final String COMPONENT_NAME    = args.DEPLOYMENT_REPO.tokenize('/').last().replace('-helm-charts.git', '')
   final String IMAGE_TAG         = env.BUILD_ID
   final String FULL_IMAGE        = "${REGISTRY}/${REPO}/${COMPONENT_NAME}:${IMAGE_TAG}"
@@ -33,7 +33,7 @@ def call(args) {
   def pt = new PodTemplate()
   def prep = new Preparer(args)
   def credManager = new CredManager()
-  def builder = new Builder(config)
+  def builder = new Builder()
 
   // ------------------- Prep on a controller/agent -------------------
   node('master') { // change label as needed
@@ -116,7 +116,7 @@ def call(args) {
       stage('Build'){
         if(language=="maven"){
         container('maven'){
-           builder.Compile(SONAR_HOST,SONAR_PROJECT_KEY,language)
+           builder.Compile(env.SONAR_TOKEN,SONAR_HOST,SONAR_PROJECT_KEY,language)
         }
       }
         

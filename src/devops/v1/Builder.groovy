@@ -1,16 +1,8 @@
 package devops.v1
 
-class Builder {
-    def config
-    def Builder(config){
-        this.config = config
-    }
-    String language = config.build_tool
-
-  
- 
-    def Compile(SONAR_HOST,SONAR_PROJECT_KEY,language){
-        if(language=="maven"){
+    def Compile(env.SONAR_TOKEN,SONAR_HOST,SONAR_PROJECT_KEY,language){
+        withCredentials([string(credentialsId: env.SONAR_TOKEN, variable: 'defectdojo_api_key')]){
+            if(language=="maven"){
             sh """
                mvn clean install verify sonar:sonar \
                  -Dsonar.host.url=${SONAR_HOST} \
@@ -24,9 +16,6 @@ class Builder {
         }
         else if(config.build_tool.equalsIgnoreCase("node.js")){
 
-        }
+        }}
 
-
-        }
-       
     }
