@@ -33,6 +33,7 @@ def call(args) {
   def pt = new PodTemplate()
   def prep = new Preparer(args)
   def credManager = new CredManager()
+  def builder = new Builder(config)
 
   // ------------------- Prep on a controller/agent -------------------
   node('master') { // change label as needed
@@ -77,42 +78,46 @@ def call(args) {
         git url: appRepo, branch: 'main'
       }
 
-      stage('Compile&Scan source code') {
-        withCredentials([string(credentialsId: env.SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
-        if(fileExists("pom.xml")){
-          container('maven') {
+      // stage('Compile&Scan source code') {
+      //   withCredentials([string(credentialsId: env.SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
+      //   if(fileExists("pom.xml")){
+      //     container('maven') {
           
-            sh """
-               mvn clean install verify sonar:sonar \
-                 -Dsonar.host.url=${SONAR_HOST} \
-                 -Dsonar.login=${SONAR_TOKEN} \
-                 -Dsonar.projectKey=${SONAR_PROJECT_KEY}
+      //       sh """
+      //          mvn clean install verify sonar:sonar \
+      //            -Dsonar.host.url=${SONAR_HOST} \
+      //            -Dsonar.login=${SONAR_TOKEN} \
+      //            -Dsonar.projectKey=${SONAR_PROJECT_KEY}
 
-              curl -s -u "${SONAR_TOKEN}:" \
-                       "${SONAR_HOST}/api/issues/search?projectKey=${SONAR_PROJECT_KEY}" \
-                       -o sonarqube-report.json
-             """
-          }
-        }else{
+      //         curl -s -u "${SONAR_TOKEN}:" \
+      //                  "${SONAR_HOST}/api/issues/search?projectKey=${SONAR_PROJECT_KEY}" \
+      //                  -o sonarqube-report.json
+      //        """
+      //     }
+      //   }else{
           
-          if(fileExists("package.json")){
-            sh '''
-            npm install \
-            npm run test
-            '''
+      //     if(fileExists("package.json")){
+      //       sh '''
+      //       npm install \
+      //       npm run test
+      //       '''
+      //   }
+      //   container('sonarqube'){
+
+      //     }
+      //     }
+      //   }
+
+      //   }
+      def language = config.build_tool.toLowerCase
+      echo 'LANGUAGE = ${language}'
+      if(config.build_tool.equalsIgnoreCase("maven")){
+        container('maven'){
+           builder.Compile(SONAR_HOST,SONAR_PROJECT_KEY)
         }
-        container('sonarqube'){
-
-          }
-          }
-
-
-        }
+      }else if()
         
-          
-        }
-        
-      
+     
 
       stage('Build Docker Image') {
         container('buildkit') {

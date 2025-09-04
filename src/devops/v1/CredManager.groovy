@@ -1,6 +1,6 @@
 package devops.v1
 
-class CredManager {
+
 
   def globalENV(){
     
@@ -18,4 +18,3 @@ class CredManager {
     env.SONAR_TOKEN =  'sonar_token'
     
   }
-}
