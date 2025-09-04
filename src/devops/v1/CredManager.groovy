@@ -3,6 +3,7 @@ package devops.v1
 class CredManager {
 
   def globalENV(){
+    
     env.TRIVY_BASE_URL = "http://trivy.trivy-system.svc.cluster.local:4954"
     env.DEFECTDOJO_BASE_URL = "http://defectdojo-django.defectdojo.svc.cluster.local"
     env.DOJO_KEY = "defect-dojo-key"
@@ -14,5 +15,7 @@ class CredManager {
     env.HELM_NONPROD_REPO = "https://gitlab.devopsnonprd.vayuktbcs/api/v4/projects/7410/packages/helm/stable"
     env.OCP_NONPROD_AGENT = "ocp-nonprod-agent"
     env.OCP_PROD_AGENT = "ocp-prod-agent"
+    env.SONAR_TOKEN =  'sonar_token'
+    
   }
 }

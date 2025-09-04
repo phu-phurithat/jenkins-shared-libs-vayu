@@ -32,7 +32,7 @@ def call(args) {
   // Helper classes
   def pt = new PodTemplate()
   def prep = new Preparer(args)
-// def credManager = new CredManager(this)
+  def credManager = new CredManager()
 
   // ------------------- Prep on a controller/agent -------------------
   node('master') { // change label as needed
@@ -59,7 +59,7 @@ def call(args) {
         error "Configuration file not found or empty at ${configPath}"
       }
       prep.injectConfig(config)
-      // credManager.globalENV()
+      credManager.globalENV()
       echo prep.getConfigSummary()
     }
 
