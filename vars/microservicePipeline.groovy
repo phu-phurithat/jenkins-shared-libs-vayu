@@ -110,7 +110,7 @@ def call(args) {
 
       //   }
       echo "config lan =${config.build_tool}"
-      def language = config.build_tool.toLowerCase()
+      def language = (config.build_tool).toLowerCase()
       echo "LANGUAGE = ${language}"
       if(config.build_tool.equalsIgnoreCase("maven")){
         container('maven'){
