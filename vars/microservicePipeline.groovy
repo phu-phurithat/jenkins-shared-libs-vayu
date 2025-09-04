@@ -110,7 +110,7 @@ def call(args) {
 
       //   }
       def language = config.build_tool.toLowerCase()
-      echo 'LANGUAGE = ${language}'
+      echo "LANGUAGE = ${language}"
       if(config.build_tool.equalsIgnoreCase("maven")){
         container('maven'){
            builder.Compile(SONAR_HOST,SONAR_PROJECT_KEY)
