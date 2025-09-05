@@ -69,7 +69,7 @@ def call(args) {
       }
 
       stage('Read Properties from "devops.properties.yaml"') {
-        String propertiesPath = "${env.WORKSPACE}/src"
+        String propertiesPath = "./src"
         if (fileExists(propertiesPath)) {
           def fileContents = readFile(file: propertiesPath, encoding: 'UTF-8')
           properties = readYaml(text: fileContents)
