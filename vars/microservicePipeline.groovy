@@ -30,6 +30,7 @@ def call(args) {
   def pt = new PodTemplate()
   def prep = new Preparer(args)
 // def credManager = new CredManager(this)
+  def config = [:]
 
   // ------------------- Prep on a controller/agent -------------------
   node('master') { // change label as needed
@@ -37,16 +38,13 @@ def call(args) {
     if (!args?.DEPLOYMENT_REPO) {
       error 'DEPLOYMENT_REPO is required'
     }
-
     
-    def config      = [:]
-
     stage('Checkout') {
       echo 'Checkout code from repository...'
       git url: args.DEPLOYMENT_REPO, branch: 'master'
     }
 
-    stage('Read Configuration from /"config.yaml/"') {
+    stage('Read Configuration from "config.yaml"') {
       echo 'Getting Configuration'
       String configPath = "${env.WORKSPACE}/config.yaml"
       String configContent = readFile(file: configPath, encoding: 'UTF-8')
