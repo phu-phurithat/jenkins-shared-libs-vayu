@@ -37,19 +37,17 @@ def call(args) {
     prep.validateArguments(args)
 
     dir ('deployment') {
-      stage('Checkout') {
-
-        echo 'Checkout code from repository...'
+      stage('Checkout Deployment Repository') {
         git url: args.DEPLOYMENT_REPO, branch: args.BRANCH ?: 'main'
       }
 
       stage('Read Configuration from "config.yaml"') {
-        echo 'Getting Configuration'
-        String configPath = "${env.WORKSPACE}/deployment/config.yaml"
+        String configPath = "./config.yaml"
         String configContent = readFile(file: configPath, encoding: 'UTF-8')
 
         if (configContent?.trim()) {
           config = readYaml(text: configContent)
+          echo config.toString()
         } else {
           error "Configuration file not found or empty at ${configPath}"
         }
