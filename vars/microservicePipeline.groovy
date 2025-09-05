@@ -47,12 +47,12 @@ def call(args) {
 
         if (configContent?.trim()) {
           config = readYaml(text: configContent)
-          echo config.toString()
+          // echo config.toString()
         } else {
           error "Configuration file not found or empty at ${configPath}"
         }
 
-        prep.validateConfig()
+        prep.validateConfig(config)
         prep.getConfigSummary(args, config)
       }
     }
