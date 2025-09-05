@@ -1,17 +1,14 @@
 import devops.v1.*
 
 def call(args) {
-  // args only contain DEPLOYMENT_REPO, TRIGGER_TOKEN
+  // args only contain DEPLOYMENT_REPO, TRIGGER_TOKEN, MICROSERVICE_NAME, BRANCH (optional)
 
   // Constants
   final String SONAR_HOST        = 'http://sonarqube-sonarqube.sonarqube.svc.cluster.local:9000'
   final String SONAR_PROJECT_KEY = 'java'
   final String BUILDKIT_ADDR     = 'tcp://buildkit-buildkit-service.buildkit.svc.cluster.local:1234'
   final String REGISTRY          = 'harbor.phurithat.site'
-  final String REPO              = 'kudesphere'
   final String DOCKER_CONFIG     = '/root/.docker/config.json'
-  final String APP_REPO          = args.DEPLOYMENT_REPO.replace('-helm-charts.git', '-app.git')
-  final String COMPONENT_NAME    = args.DEPLOYMENT_REPO.tokenize('/').last().replace('-helm-charts.git', '')
 
   // ENV
   env.TRIVY_BASE_URL = 'http://trivy.trivy-system.svc.cluster.local:4954'
@@ -28,89 +25,78 @@ def call(args) {
 
   // Helper classes
   def pt = new PodTemplate()
-  def prep = new Preparer(args)
-// def credManager = new CredManager(this)
+  def prep = new Preparer()
+  // def credManager = new CredManager(this)
   def config = [:]
+  def properties = [:]
+  String microserviceRepo = ''
 
   // ------------------- Prep on a controller/agent -------------------
   node('master') { // change label as needed
     // Basic input validation
-    if (!args?.DEPLOYMENT_REPO) {
-      error 'DEPLOYMENT_REPO is required'
-    }
-    
-    stage('Checkout') {
-      echo 'Checkout code from repository...'
-      git url: args.DEPLOYMENT_REPO, branch: 'master'
-    }
+    prep.validateArguments(args)
 
-    stage('Read Configuration from "config.yaml"') {
-      echo 'Getting Configuration'
-      String configPath = "${env.WORKSPACE}/config.yaml"
-      String configContent = readFile(file: configPath, encoding: 'UTF-8')
+    dir ('deployment') {
+      stage('Checkout') {
 
-      if (configContent?.trim()) {
-        config = readYaml(text: configContent)
-      } else {
-        error "Configuration file not found or empty at ${configPath}"
+        echo 'Checkout code from repository...'
+        git url: args.DEPLOYMENT_REPO, branch: args.BRANCH ?: 'main'
       }
-      prep.injectConfig(config)
-      // credManager.globalENV()
-      echo prep.getConfigSummary()
+
+      stage('Read Configuration from "config.yaml"') {
+        echo 'Getting Configuration'
+        String configPath = "${env.WORKSPACE}/deployment/config.yaml"
+        String configContent = readFile(file: configPath, encoding: 'UTF-8')
+
+        if (configContent?.trim()) {
+          config = readYaml(text: configContent)
+        } else {
+          error "Configuration file not found or empty at ${configPath}"
+        }
+
+        prep.validateConfig()
+        prep.getConfigSummary(args, config)
+      }
     }
 
-    stage('Prepare Agent') {
-      pt.injectConfig(config)
+    dir('src'){
+      stage('Checkout Microservice Code for Preparation') {
+        microserviceRepo = config.kinds.deployments[args.MICROSERVICE_NAME]
+        if (!microserviceRepo) {
+          error "Microservice '${args.MICROSERVICE_NAME}' not found in configuration."
+        }
+        
+        echo "Cloning microservice repository: ${microserviceRepo}"
+        git url: microserviceRepo, branch: 'main'
+      }
+
+      stage('Read Properties from "devops.properties.yaml"') {
+        String propertiesPath = "${env.WORKSPACE}/src"
+        if (fileExists(propertiesPath)) {
+          def fileContents = readFile(file: propertiesPath, encoding: 'UTF-8')
+          properties = readYaml(text: fileContents)
+        } else {
+          error "Properties file not found at ${propertiesPath}"
+        }
+      }
     }
-  }
+
+      
+
+      stage('Prepare Agent') {
+        pt.injectConfig(properties)
+      }
+}
 
   // ------------------- Run inside Kubernetes podTemplate -------------------
   podTemplate(yaml: pt.toString()) {
     node(POD_LABEL) {
-      stage('Checkout') {
-        echo 'Checkout code from repository...'
-        String appRepo = args.DEPLOYMENT_REPO.replace('-helm-charts.git', '-app.git')
-        git url: appRepo, branch: 'master'
-      }
-
-      // stage('Compile&Scan source code') {
-      //   container('maven') {
-      //     withCredentials([string(credentialsId: 'java_sonar', variable: 'JAVA_TOKEN')]) {
-      //       sh """
-      //         mvn clean install verify sonar:sonar \
-      //           -Dsonar.host.url=${SONAR_HOST} \
-      //           -Dsonar.login=${JAVA_TOKEN} \
-      //           -Dsonar.projectKey=${SONAR_PROJECT_KEY}
-      //       """
-      //     }
-      //   }
-      // }
-
-      stage('Build Docker Image') {
-        String imageTag = 'latest'
-        container('buildkit') {
-          sh """
-            buildctl \
-              --addr ${BUILDKIT_ADDR} \
-              build \
-              --frontend dockerfile.v0 \
-              --local context=. \
-              --local dockerfile=. \
-              --output type=image,\
-name=${REGISTRY}/${REPO}/${componentName}:${imageTag},\
-push=true,\
-registry.config=${DOCKER_CONFIG} \
-              --export-cache type=inline \
-              --import-cache type=registry,ref=${REGISTRY}
-          """
+      dir('jenkins-agent') {
+        stage('Checkout Microservice Code for Build/Deploy') {
+          git url: microserviceRepo, branch: args.BRANCH
         }
       }
-
-      stage('Image Scan') {
-        container('trivy') {
-          sh "trivy image --severity HIGH,CRITICAL ${REGISTRY}"
-        }
-      }
+      
 
     // stage('Deploy') {
     //   container('kubectl') {
@@ -122,4 +108,89 @@ registry.config=${DOCKER_CONFIG} \
     // }
     }
   }
+}
+
+def validateArguments(args) {
+  String validateResult = ""
+  if (!args?.DEPLOYMENT_REPO) {
+    validateResult += 'DEPLOYMENT_REPO is required. '
+  }
+  if (!args?.TRIGGER_TOKEN) {
+    validateResult += 'TRIGGER_TOKEN is required. '
+  }
+  if (!args?.MICROSERVICE_NAME) {
+    validateResult += 'MICROSERVICE_NAME is required. '
+  }
+  if (validateResult) {
+    error "Invalid arguments: ${validateResult}"
+  }
+}
+
+def validateConfig(config) {
+    def errors = []
+
+    // app_id
+    if (!(config.app_id instanceof Integer)) {
+        errors << "app_id must be an integer"
+    }
+
+    // deployments
+    if (!(config.kinds?.deployments instanceof Map)) {
+        errors << "kinds.deployments must exist and be a map"
+    } else {
+        config.kinds.deployments.each { name, url ->
+            if (!(url instanceof String)) {
+                errors << "Deployment '${name}' must have a Git URL string"
+            } else if (!url.startsWith("https://github.com/")) {
+                errors << "Deployment '${name}' has invalid repo URL: ${url}"
+            }
+        }
+    }
+
+    // environments
+    if (!(config.environments instanceof Map)) {
+        errors << "environments must exist and be a map"
+    } else {
+        config.environments.each { env, details ->
+            if (!(details instanceof Map)) {
+                errors << "Environment '${env}' must be a map"
+            } else {
+                if (details.cluster && !details.namespace) {
+                    errors << "Environment '${env}' must have namespace when cluster is defined"
+                }
+                if (details.endpoint && !details.credential) {
+                    errors << "Environment '${env}' with endpoint must also define credential"
+                }
+            }
+        }
+    }
+
+    // registry
+    if (!(config.registry instanceof Map)) {
+        errors << "registry must exist and be a map"
+    } else {
+        ["nonprod", "prod"].each { key ->
+            if (!(config.registry[key] instanceof String)) {
+                errors << "Registry '${key}' must exist"
+            } else if (!config.registry[key].startsWith("harbor.")) {
+                errors << "Registry '${key}' must point to Harbor: ${config.registry[key]}"
+            }
+        }
+    }
+
+    // helm
+    if (!(config.helm instanceof Map)) {
+        errors << "helm must exist and be a map"
+    } else {
+        if (!(config.helm.version ==~ /\d+\.\d+\.\d+/)) {
+            errors << "helm.version must be semantic version (e.g., 1.0.0)"
+        }
+    }
+
+    // Final check
+    if (errors) {
+        error "❌ Config validation failed:\n - " + errors.join("\n - ")
+    } else {
+        echo "✅ Config validation passed!"
+    }
 }
