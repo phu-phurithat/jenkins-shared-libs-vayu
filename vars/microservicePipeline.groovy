@@ -1,7 +1,7 @@
 import devops.v1.*
 
 def call(args) {
-  // args only contain DEPLOYMENT_REPO, TRIGGER_TOKEN, MICROSERVICE_NAME, BRANCH (optional)
+  // args only contain DEPLOYMENT_REPO, TRIGGER_TOKEN, MICROSERVICE_NAME, BRANCH (optional), TARGET_ENV
 
   // Constants
   final String SONAR_HOST        = 'http://sonarqube-sonarqube.sonarqube.svc.cluster.local:9000'
@@ -30,24 +30,25 @@ def call(args) {
   def config = [:]
   def properties = [:]
   String microserviceRepo = ''
+  String fullImageName = ''
 
   // ------------------- Prep on a controller/agent -------------------
   node('master') { // change label as needed
     // Basic input validation
     prep.validateArguments(args)
 
-    dir ('deployment') {
+    dir('deployment') {
       stage('Checkout Deployment Repository') {
         git url: args.DEPLOYMENT_REPO, branch: args.BRANCH ?: 'main'
       }
 
       stage('Read Configuration from "config.yaml"') {
-        String configPath = "./config.yaml"
+        String configPath = './config.yaml'
         String configContent = readFile(file: configPath, encoding: 'UTF-8')
 
         if (configContent?.trim()) {
           config = readYaml(text: configContent)
-          // echo config.toString()
+        // echo config.toString()
         } else {
           error "Configuration file not found or empty at ${configPath}"
         }
@@ -57,19 +58,19 @@ def call(args) {
       }
     }
 
-    dir('src'){
+    dir('src') {
       stage('Checkout Microservice Code for Preparation') {
         microserviceRepo = config.kinds.deployments[args.MICROSERVICE_NAME]
         if (!microserviceRepo) {
           error "Microservice '${args.MICROSERVICE_NAME}' not found in configuration."
         }
-        
+
         echo "Cloning microservice repository: ${microserviceRepo}"
         git url: microserviceRepo, branch: 'main'
       }
 
       stage('Read Properties from "devops.properties.yaml"') {
-        String propertiesPath = "./devops.properties.yaml"
+        String propertiesPath = './devops.properties.yaml'
         if (fileExists(propertiesPath)) {
           def fileContents = readFile(file: propertiesPath, encoding: 'UTF-8')
           properties = readYaml(text: fileContents)
@@ -79,37 +80,45 @@ def call(args) {
       }
     }
 
-      
-
       stage('Prepare Agent') {
         pt.injectConfig(properties)
       }
-}
+  }
 
   // ------------------- Run inside Kubernetes podTemplate -------------------
   podTemplate(yaml: pt.toString()) {
     node(POD_LABEL) {
-      dir('jenkins-agent') {
-        stage('Checkout Microservice Code for Build/Deploy') {
-          git url: microserviceRepo, branch: args.BRANCH
+
+      stage('Deploy') {
+        container('helm') {
+          String kubeconfigCred = appName.toLowerCase() + '-kubeconfig'
+          withCredentials([file(credentialsId: kubeconfigCred, variable: 'KUBECONFIG_FILE')]) {
+            sh 'kubectl --kubeconfig=${KUBECONFIG_FILE} apply -k k8s/'
+          }
         }
       }
-      
-
-    // stage('Deploy') {
-    //   container('kubectl') {
-    //     echo 'Deploying application to Kubernetes...'
-    //     withCredentials([file(credentialsId: 'boardgame-kubeconfig', variable: 'KUBECONFIG_FILE')]) {
-    //       sh 'kubectl --kubeconfig=${KUBECONFIG_FILE} apply -k k8s/'
-    //     }
-    //   }
-    // }
+      stage('Deploy via Helm') {
+        container('helm') {
+          String kubeconfigCred = config.environments[TARGET_ENV].cluster
+          String namespace    = config.environments[TARGET_ENV].namespace
+          String HELM_PATH   = "helm"   // path where your Helm chart lives
+          String HELM_RELEASE = "microservice-demo" // release name
+          withCredentials([file(credentialsId: kubeconfigCred, variable: 'KUBECONFIG_FILE')]) {
+            sh """
+              export KUBECONFIG=${KUBECONFIG_FILE}
+              helm upgrade --install ${HELM_RELEASE} ${HELM_PATH} \
+                --namespace ${namespace} \
+                --create-namespace \
+            """
+          }
+        }
+      }
     }
   }
 }
 
 def validateArguments(args) {
-  String validateResult = ""
+  String validateResult = ''
   if (!args?.DEPLOYMENT_REPO) {
     validateResult += 'DEPLOYMENT_REPO is required. '
   }
@@ -125,70 +134,70 @@ def validateArguments(args) {
 }
 
 def validateConfig(config) {
-    def errors = []
+  def errors = []
 
-    // app_id
-    if (!(config.app_id instanceof Integer)) {
-        errors << "app_id must be an integer"
-    }
+  // app_id
+  if (!(config.app_id instanceof Integer)) {
+    errors << 'app_id must be an integer'
+  }
 
-    // deployments
-    if (!(config.kinds?.deployments instanceof Map)) {
-        errors << "kinds.deployments must exist and be a map"
+  // deployments
+  if (!(config.kinds?.deployments instanceof Map)) {
+    errors << 'kinds.deployments must exist and be a map'
     } else {
-        config.kinds.deployments.each { name, url ->
-            if (!(url instanceof String)) {
-                errors << "Deployment '${name}' must have a Git URL string"
-            } else if (!url.startsWith("https://github.com/")) {
-                errors << "Deployment '${name}' has invalid repo URL: ${url}"
-            }
-        }
+    config.kinds.deployments.each { name, url ->
+      if (!(url instanceof String)) {
+        errors << "Deployment '${name}' must have a Git URL string"
+            } else if (!url.startsWith('https://github.com/')) {
+        errors << "Deployment '${name}' has invalid repo URL: ${url}"
+      }
     }
+  }
 
-    // environments
-    if (!(config.environments instanceof Map)) {
-        errors << "environments must exist and be a map"
+  // environments
+  if (!(config.environments instanceof Map)) {
+    errors << 'environments must exist and be a map'
     } else {
-        config.environments.each { env, details ->
-            if (!(details instanceof Map)) {
-                errors << "Environment '${env}' must be a map"
+    config.environments.each { env, details ->
+      if (!(details instanceof Map)) {
+        errors << "Environment '${env}' must be a map"
             } else {
-                if (details.cluster && !details.namespace) {
-                    errors << "Environment '${env}' must have namespace when cluster is defined"
-                }
-                if (details.endpoint && !details.credential) {
-                    errors << "Environment '${env}' with endpoint must also define credential"
-                }
-            }
+        if (details.cluster && !details.namespace) {
+          errors << "Environment '${env}' must have namespace when cluster is defined"
         }
-    }
-
-    // registry
-    if (!(config.registry instanceof Map)) {
-        errors << "registry must exist and be a map"
-    } else {
-        ["nonprod", "prod"].each { key ->
-            if (!(config.registry[key] instanceof String)) {
-                errors << "Registry '${key}' must exist"
-            } else if (!config.registry[key].startsWith("harbor.")) {
-                errors << "Registry '${key}' must point to Harbor: ${config.registry[key]}"
-            }
+        if (details.endpoint && !details.credential) {
+          errors << "Environment '${env}' with endpoint must also define credential"
         }
+      }
     }
+  }
 
-    // helm
-    if (!(config.helm instanceof Map)) {
-        errors << "helm must exist and be a map"
+  // registry
+  if (!(config.registry instanceof Map)) {
+    errors << 'registry must exist and be a map'
     } else {
-        if (!(config.helm.version ==~ /\d+\.\d+\.\d+/)) {
-            errors << "helm.version must be semantic version (e.g., 1.0.0)"
-        }
+    ['nonprod', 'prod'].each { key ->
+      if (!(config.registry[key] instanceof String)) {
+        errors << "Registry '${key}' must exist"
+            } else if (!config.registry[key].startsWith('harbor.')) {
+        errors << "Registry '${key}' must point to Harbor: ${config.registry[key]}"
+      }
     }
+  }
 
-    // Final check
-    if (errors) {
-        error "❌ Config validation failed:\n - " + errors.join("\n - ")
+  // helm
+  if (!(config.helm instanceof Map)) {
+    errors << 'helm must exist and be a map'
     } else {
-        echo "✅ Config validation passed!"
+    if (!(config.helm.version ==~ /\d+\.\d+\.\d+/)) {
+      errors << 'helm.version must be semantic version (e.g., 1.0.0)'
     }
+  }
+
+  // Final check
+  if (errors) {
+    error '❌ Config validation failed:\n - ' + errors.join('\n - ')
+    } else {
+    echo '✅ Config validation passed!'
+  }
 }
