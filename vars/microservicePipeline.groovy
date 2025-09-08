@@ -99,9 +99,8 @@ def call(args) {
           container('helm') {
             String kubeconfigCred = config.environments[args.TARGET_ENV].cluster.toLowerCase()
             String NAMESPACE    = config.environments[args.TARGET_ENV].namespace.toLowerCase()
-            String HELM_PATH   = './helm-chart'   // path where your Helm chart lives
+            String HELM_PATH   = 'src/helm-chart'   // path where your Helm chart lives
             String HELM_RELEASE = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '')
-            sh "tree"
             withCredentials([file(credentialsId: kubeconfigCred, variable: 'KUBECONFIG_FILE')]) {
               sh """
               export KUBECONFIG=${KUBECONFIG_FILE}
