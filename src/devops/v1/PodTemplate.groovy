@@ -22,7 +22,7 @@ class PodTemplate implements Serializable {
     ]
   ]
 
-  PodTemplate injectConfig(config) {
+  PodTemplate injectConfig(config, args) {
     // Build tool container
     String tool = (config.build_tool ?: '').toString().toLowerCase()
     switch (tool) {
@@ -52,12 +52,12 @@ class PodTemplate implements Serializable {
     if (sec.secret in [true, 'true']) {
       addGitLeaks()
     }
-    return this
 
-    if (config.auto_deploy in [true, 'true']) {
+    if (args.AUTO_DEPLOY in [true, 'true']) {
       addKubectl()
       addHelm()
     }
+    return this
   }
 
   PodTemplate addMaven() {
@@ -67,10 +67,10 @@ class PodTemplate implements Serializable {
       imagePullPolicy: 'Always',
       command        : ['cat'],
       tty            : true,
-      // resources      : [
-      //   requests: ['ephemeral-storage': '512Mi'],
-      //   limits  : ['ephemeral-storage': '1Gi']
-      // ]
+    // resources      : [
+    //   requests: ['ephemeral-storage': '512Mi'],
+    //   limits  : ['ephemeral-storage': '1Gi']
+    // ]
     ])
     return this
   }
@@ -119,10 +119,10 @@ class PodTemplate implements Serializable {
         [ name: 'shared',        mountPath: '/jenkins-agent' ],
         [ name: 'harbor-secret', mountPath: '/root/.docker' ]
       ],
-      // resources      : [
-      //   requests: [ cpu: '200m', memory: '1Gi', 'ephemeral-storage': '2Gi' ],
-      //   limits  : [ cpu: '500m', memory: '2Gi', 'ephemeral-storage': '4Gi' ]
-      // ]
+    // resources      : [
+    //   requests: [ cpu: '200m', memory: '1Gi', 'ephemeral-storage': '2Gi' ],
+    //   limits  : [ cpu: '500m', memory: '2Gi', 'ephemeral-storage': '4Gi' ]
+    // ]
     ])
     addHarborSecretVolume()
     return this
@@ -135,10 +135,10 @@ class PodTemplate implements Serializable {
       imagePullPolicy: 'Always',
       command        : ['cat'],
       tty            : true,
-      // resources      : [
-      //   requests: [ cpu: '500m', memory: '2Gi', 'ephemeral-storage': '512Mi' ],
-      //   limits  : [ cpu: '1000m', memory: '4Gi', 'ephemeral-storage': '1Gi' ]
-      // ]
+    // resources      : [
+    //   requests: [ cpu: '500m', memory: '2Gi', 'ephemeral-storage': '512Mi' ],
+    //   limits  : [ cpu: '1000m', memory: '4Gi', 'ephemeral-storage': '1Gi' ]
+    // ]
     ])
     return this
   }

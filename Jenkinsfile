@@ -5,5 +5,6 @@ microservicePipeline(
   TRIGGER_TOKEN: "GITHUB_TOKEN",
   MICROSERVICE_NAME: "<MICROSERVICE_NAME>",  // Not Application Name, just Microservice Name (e.g., catalog, user
   BRANCH: "<BRANCH_NAME>",
+  AUTO_DEPLOY: true,
   TARGET_ENV: "<TARGET_ENV>"  // e.g., dev, sit, uat, prod
 )

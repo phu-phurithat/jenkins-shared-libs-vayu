@@ -81,7 +81,7 @@ def call(args) {
     }
 
       stage('Prepare Agent') {
-        pt.injectConfig(properties)
+        pt.injectConfig(properties, args)
       }
   }
 
