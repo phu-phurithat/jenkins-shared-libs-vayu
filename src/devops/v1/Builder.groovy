@@ -19,3 +19,17 @@ package devops.v1
         }}
 
     }
+def BuildImage(BUILDKIT_ADDR,FULL_IMAGE,DOCKER_CONFIG,REGISTRY){
+     sh """
+            buildctl \
+              --addr ${BUILDKIT_ADDR} \
+              build \
+              prune \
+              --frontend dockerfile.v0 \
+              --local context=. \
+              --local dockerfile=. \
+              --output type=image,name=${FULL_IMAGE},push=true,registry.config=${DOCKER_CONFIG} \
+              --export-cache type=inline \
+              --import-cache type=registry,ref=${REGISTRY}
+          """
+}
