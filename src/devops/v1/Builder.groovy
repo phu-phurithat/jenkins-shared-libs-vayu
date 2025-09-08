@@ -1,8 +1,8 @@
 package devops.v1
 
-    def Compile(SONAR_TOKEN,SONAR_HOST,SONAR_PROJECT_KEY,language){
-        withCredentials([string(credentialsId: SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
-            if(language=="maven"){
+def Compile(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, language) {
+    withCredentials([string(credentialsId: SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
+            if (language == 'maven') {
             sh """
                mvn clean install verify sonar:sonar \
                  -Dsonar.host.url=${SONAR_HOST} \
@@ -13,14 +13,12 @@ package devops.v1
                        "${SONAR_HOST}/api/issues/search?projectKey=${SONAR_PROJECT_KEY}" \
                        -o sonarqube-report.json
              """
-        }
-        else if(config.build_tool.equalsIgnoreCase("node.js")){
-
+            }
+        else if (config.build_tool.equalsIgnoreCase('node.js')) {
         }}
-
     }
-def BuildImage(BUILDKIT_ADDR,FULL_IMAGE,DOCKER_CONFIG,REGISTRY){
-     sh """
+def BuildImage(BUILDKIT_ADDR, FULL_IMAGE, DOCKER_CONFIG, REGISTRY) {
+    sh """
             buildctl \
               --addr ${BUILDKIT_ADDR} \
               build \

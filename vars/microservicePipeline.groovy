@@ -34,6 +34,7 @@ def call(args) {
   def prep = new Preparer(args)
   def credManager = new CredManager()
   def builder = new Builder()
+  def scanner = new SecurityScanner()
 
   // ------------------- Prep on a controller/agent -------------------
   node('master') { // change label as needed
@@ -143,31 +144,33 @@ def call(args) {
       }
       stage('Dependencies Scan') {
         container('trivy') {
-          sh """
-            trivy fs . \
-            --server ${TRIVY_BASE_URL} \
-            --scanners vuln \
-            --offline-scan \
-            --format cyclonedx \
-            -o trivy_vuln.json
-          """
+          // sh """
+          //   trivy fs . \
+          //   --server ${TRIVY_BASE_URL} \
+          //   --scanners vuln \
+          //   --offline-scan \
+          //   --format cyclonedx \
+          //   -o trivy_vuln.json
+          // """
+          scanner.DependenciesScan()
         }
       }
       stage('Image Scan') {
         container('trivy') {
           //sh "trivy image --severity HIGH,CRITICAL ${REGISTRY}/${REPO}/${COMPONENT_NAME}:${IMAGE_TAG} || true"
-          sh """
-              trivy image ${FULL_IMAGE} \
-                        --server ${TRIVY_BASE_URL} \
-                        --timeout 10m \
-                        --skip-db-update \
-                        --severity CRITICAL,HIGH,MEDIUM \
-                        --ignore-unfixed \
-                        --scanners vuln \
-                        --format cyclonedx \
-                        -o trivy_image.json
+          // sh """
+          //     trivy image ${FULL_IMAGE} \
+          //               --server ${TRIVY_BASE_URL} \
+          //               --timeout 10m \
+          //               --skip-db-update \
+          //               --severity CRITICAL,HIGH,MEDIUM \
+          //               --ignore-unfixed \
+          //               --scanners vuln \
+          //               --format cyclonedx \
+          //               -o trivy_image.json
 
-          """
+          // """
+          scanner.ImageScan(FULL_IMAGE)
         }
       }
 
