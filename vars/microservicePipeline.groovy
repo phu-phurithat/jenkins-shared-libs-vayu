@@ -116,7 +116,7 @@ def call(args) {
       stage('Build'){
         if(language=="maven"){
         container('maven'){
-           builder.Compile(env.SONAR_TOKEN,SONAR_HOST,SONAR_PROJECT_KEY,language)
+           builder.Compile(SONAR_TOKEN,SONAR_HOST,SONAR_PROJECT_KEY,language)
         }
       }
         
@@ -144,7 +144,7 @@ def call(args) {
         container('trivy') {
           sh """
             trivy fs . \
-            --server ${env.TRIVY_BASE_URL} \
+            --server ${TRIVY_BASE_URL} \
             --scanners vuln \
             --offline-scan \
             --format cyclonedx \
@@ -157,7 +157,7 @@ def call(args) {
           //sh "trivy image --severity HIGH,CRITICAL ${REGISTRY}/${REPO}/${COMPONENT_NAME}:${IMAGE_TAG} || true"
           sh """
               trivy image ${FULL_IMAGE} \
-                        --server ${env.TRIVY_BASE_URL} \
+                        --server ${TRIVY_BASE_URL} \
                         --timeout 10m \
                         --skip-db-update \
                         --severity CRITICAL,HIGH,MEDIUM \
@@ -171,11 +171,11 @@ def call(args) {
       }
 
       stage('Import report') {
-            withCredentials([string(credentialsId: env.DOJO_KEY, variable: 'defectdojo_api_key')]) {
+            withCredentials([string(credentialsId: DOJO_KEY, variable: 'defectdojo_api_key')]) {
           //SonarQube Scan Source Code
           sh """
 
-          curl -k -X POST "${env.DEFECTDOJO_BASE_URL}/api/v2/reimport-scan/" \
+          curl -k -X POST "${DEFECTDOJO_BASE_URL}/api/v2/reimport-scan/" \
             -H "Authorization: Token $defectdojo_api_key" \
             -F scan_type="SonarQube Scan" \
             -F test_title="SonarQube Scan Source Code" \
