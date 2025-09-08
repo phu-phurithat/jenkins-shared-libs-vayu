@@ -98,7 +98,7 @@ def call(args) {
             withCredentials([file(credentialsId: kubeconfigCred, variable: 'KUBECONFIG_FILE')]) {
               sh """
               export KUBECONFIG=${KUBECONFIG_FILE}
-              helm upgrade --install ${HELM_RELEASE} -f ${HELM_PATH} \
+              helm upgrade --install ${HELM_RELEASE} ${HELM_PATH} \
                 --namespace ${NAMESPACE} \
                 --create-namespace \
                 --dry-run=client
