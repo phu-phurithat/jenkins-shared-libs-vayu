@@ -126,6 +126,8 @@ def call(args) {
                 --create-namespace \
                 --wait --timeout 5m
             """
+            // For demo purposes only
+            sh "echo ${env}"
           }
         }
       }
