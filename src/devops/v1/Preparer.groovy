@@ -1,10 +1,9 @@
 package devops.v1
 
 def getConfigSummary(args, config) {
-
-  String appName = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git','')
-  String microserviceRepo = config.kinds.deployments[args.MICROSERVICE_NAME]
-  echo """
+    String appName = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '')
+    String microserviceRepo = config.kinds.deployments[args.MICROSERVICE_NAME]
+    echo """
 #> ═════════════════════ Ⓘ Configuration Summary ═══════════════════════════════════
 |  ❯ Application : ${appName}
 |  ❯ App ID     : ${config.app_id}
@@ -12,24 +11,24 @@ def getConfigSummary(args, config) {
 |  ❯ Microservice Repo : ${microserviceRepo}
 #> ──────────────────────────────────────────────────────────────────────────────────
 """
-  }
+}
 
 def validateArguments(args) {
-  def errors = []
+    def errors = []
 
-  if (!args?.DEPLOYMENT_REPO) {
-    errors << 'DEPLOYMENT_REPO is required.'
-  }
-  if (!args?.TRIGGER_TOKEN) {
-    errors << 'TRIGGER_TOKEN is required.'
-  }
-  if (!args?.MICROSERVICE_NAME) {
-    errors << 'MICROSERVICE_NAME is required.'
-  }
-  
-  if (errors) {
-    error "Invalid arguments: \n - " + errors.join("\n - ")
-  }
+    if (!args?.DEPLOYMENT_REPO) {
+        errors << 'DEPLOYMENT_REPO is required.'
+    }
+    if (!args?.TRIGGER_TOKEN) {
+        errors << 'TRIGGER_TOKEN is required.'
+    }
+    if (!args?.MICROSERVICE_NAME) {
+        errors << 'MICROSERVICE_NAME is required.'
+    }
+
+    if (errors) {
+        error 'Invalid arguments: \n - ' + errors.join('\n - ')
+    }
 }
 
 def validateConfig(config) {
@@ -37,17 +36,17 @@ def validateConfig(config) {
 
     // app_id
     if (!(config.app_id instanceof Integer)) {
-        errors << "app_id must be an integer"
+        errors << 'app_id must be an integer'
     }
 
     // deployments
     if (!(config.kinds?.deployments instanceof Map)) {
-        errors << "kinds.deployments must exist and be a map"
+        errors << 'kinds.deployments must exist and be a map'
     } else {
         config.kinds.deployments.each { name, url ->
             if (!(url instanceof String)) {
                 errors << "Deployment '${name}' must have a Git URL string"
-            } else if (!url.startsWith("https://github.com/")) {
+            } else if (!url.startsWith('https://github.com/')) {
                 errors << "Deployment '${name}' has invalid repo URL: ${url}"
             }
         }
@@ -55,7 +54,7 @@ def validateConfig(config) {
 
     // environments
     if (!(config.environments instanceof Map)) {
-        errors << "environments must exist and be a map"
+        errors << 'environments must exist and be a map'
     } else {
         config.environments.each { env, details ->
             if (!(details instanceof Map)) {
@@ -73,12 +72,12 @@ def validateConfig(config) {
 
     // registry
     if (!(config.registry instanceof Map)) {
-        errors << "registry must exist and be a map"
+        errors << 'registry must exist and be a map'
     } else {
-        ["nonprod", "prod"].each { key ->
+        ['nonprod', 'prod'].each { key ->
             if (!(config.registry[key] instanceof String)) {
                 errors << "Registry '${key}' must exist"
-            } else if (!config.registry[key].startsWith("harbor.")) {
+            } else if (!config.registry[key].startsWith('harbor.')) {
                 errors << "Registry '${key}' must point to Harbor: ${config.registry[key]}"
             }
         }
@@ -86,17 +85,17 @@ def validateConfig(config) {
 
     // helm
     if (!(config.helm instanceof Map)) {
-        errors << "helm must exist and be a map"
+        errors << 'helm must exist and be a map'
     } else {
         if (!(config.helm.version ==~ /\d+\.\d+\.\d+/)) {
-            errors << "helm.version must be semantic version (e.g., 1.0.0)"
+            errors << 'helm.version must be semantic version (e.g., 1.0.0)'
         }
     }
 
     // Final check
     if (errors) {
-        error "❌ Config validation failed:\n - " + errors.join("\n - ")
+        error '❌ Config validation failed:\n - ' + errors.join('\n - ')
     } else {
-        echo "✅ Config validation passed!"
+        echo '✅ Config validation passed!'
     }
 }
