@@ -89,25 +89,41 @@ def call(args) {
   podTemplate(yaml: pt.toString()) {
     node(POD_LABEL) {
       dir('deployment') {
+        String kubeconfigCred = config.environments[args.TARGET_ENV].cluster.toLowerCase()
+        String NAMESPACE    = config.environments[args.TARGET_ENV].namespace.toLowerCase()
+        String HELM_PATH   = './helm-chart'   // path where your Helm chart lives
+        String HELM_RELEASE = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '')
+
         stage('Checkout Deployment Repository') {
-          dir('src') {
-            // Re-clone to ensure clean state inside pod
-            git url: args.DEPLOYMENT_REPO, branch: args.BRANCH
-          }
+          // Re-clone to ensure clean state inside pod
+          git url: args.DEPLOYMENT_REPO, branch: args.BRANCH
         }
-        stage('Deploy via Helm') {
-          container('helm') {
-            String kubeconfigCred = config.environments[args.TARGET_ENV].cluster.toLowerCase()
-            String NAMESPACE    = config.environments[args.TARGET_ENV].namespace.toLowerCase()
-            String HELM_PATH   = 'src/helm-chart'   // path where your Helm chart lives
-            String HELM_RELEASE = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '')
-            withCredentials([file(credentialsId: kubeconfigCred, variable: 'KUBECONFIG_FILE')]) {
-              sh """
-              export KUBECONFIG=${KUBECONFIG_FILE}
+
+        container('helm') {
+          stage('Helm Lint & Dry-Run') {
+            try {
+              sh "helm lint ${HELM_PATH}"
+
+              withCredentials([file(credentialsId: kubeconfigCred, variable: 'KUBECONFIG_FILE')]) {
+                sh """
+                export KUBECONFIG=${KUBECONFIG_FILE}
+                helm upgrade --install ${HELM_RELEASE} ${HELM_PATH} \
+                  --namespace ${NAMESPACE} \
+                  --create-namespace \
+                  --dry-run=client
+              """
+            } catch (Exception e) {
+              error "Helm dry-run failed: ${e}"
+              }
+            }
+          }
+
+          stage('Deploy via Helm') {
+            sh """
               helm upgrade --install ${HELM_RELEASE} ${HELM_PATH} \
                 --namespace ${NAMESPACE} \
                 --create-namespace \
-                --dry-run=client
+                --wait --timeout 5m
             """
             }
           }
@@ -116,3 +132,4 @@ def call(args) {
     }
   }
 }
+
