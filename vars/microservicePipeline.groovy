@@ -115,7 +115,6 @@ def call(args) {
               }
             } catch (Exception e) {
               error "Helm dry-run failed: ${e}"
-              }
             }
           }
 
@@ -126,11 +125,9 @@ def call(args) {
                 --create-namespace \
                 --wait --timeout 5m
             """
-            }
           }
         }
       }
     }
   }
 }
-
