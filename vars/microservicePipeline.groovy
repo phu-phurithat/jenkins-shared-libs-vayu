@@ -133,7 +133,7 @@ def call(args) {
               error "Helm deploy failed: ${e}"
             }
             // For demo purposes only
-            sh "printenv | sort"
+            // sh "printenv | sort"
           }
         }
       }
