@@ -93,12 +93,12 @@ def call(args) {
           dir('deployment') {
             String kubeconfigCred = config.environments[args.TARGET_ENV].cluster.toLowerCase()
             String NAMESPACE    = config.environments[args.TARGET_ENV].namespace.toLowerCase()
-            String HELM_PATH   = 'helm-chart'   // path where your Helm chart lives
+            String HELM_PATH   = './helm-chart'   // path where your Helm chart lives
             String HELM_RELEASE = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '')
             withCredentials([file(credentialsId: kubeconfigCred, variable: 'KUBECONFIG_FILE')]) {
               sh """
               export KUBECONFIG=${KUBECONFIG_FILE}
-              helm upgrade --install ${HELM_RELEASE} ${HELM_PATH} \
+              helm upgrade --install ${HELM_RELEASE} -f ${HELM_PATH} \
                 --namespace ${NAMESPACE} \
                 --create-namespace \
                 --dry-run=client
