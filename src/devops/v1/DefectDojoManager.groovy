@@ -1,11 +1,11 @@
 package devops.v1
 def ImportReport() {
-      withCredentials([string(credentialsId: DOJO_KEY, variable: 'DOJO_KEY')]) {
+      withCredentials([string(credentialsId: env.DOJO_KEY, variable: 'DOJO_KEY')]) {
           //SonarQube Scan Source Code
           sh """
 
           curl -k -X POST "${DEFECTDOJO_BASE_URL}/api/v2/reimport-scan/" \
-            -H "Authorization: Token ${DOJO_KEY}" \
+            -H "Authorization: Token $DOJO_KEY" \
             -F scan_type="SonarQube Scan" \
             -F test_title="SonarQube Scan Source Code" \
             -F active="true" \
