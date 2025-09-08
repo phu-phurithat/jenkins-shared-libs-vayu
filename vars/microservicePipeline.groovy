@@ -112,6 +112,7 @@ def call(args) {
                   --create-namespace \
                   --dry-run=client
               """
+              }
             } catch (Exception e) {
               error "Helm dry-run failed: ${e}"
               }
