@@ -1,12 +1,12 @@
 package devops.v1
 
     def Compile(SONAR_TOKEN,SONAR_HOST,SONAR_PROJECT_KEY,language){
-        withCredentials([string(credentialsId: SONAR_TOKEN, variable: 'defectdojo_api_key')]){
+        withCredentials([string(credentialsId: SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
             if(language=="maven"){
             sh """
                mvn clean install verify sonar:sonar \
                  -Dsonar.host.url=${SONAR_HOST} \
-                 -Dsonar.login=${env.SONAR_TOKEN} \
+                 -Dsonar.login=${SONAR_TOKEN} \
                  -Dsonar.projectKey=${SONAR_PROJECT_KEY}
 
               curl -s -u "${env.SONAR_TOKEN}:" \
