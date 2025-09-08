@@ -120,6 +120,7 @@ def call(args) {
 
           stage('Deploy via Helm') {
             sh """
+              export KUBECONFIG=${KUBECONFIG_FILE}
               helm upgrade --install ${HELM_RELEASE} ${HELM_PATH} \
                 --namespace ${NAMESPACE} \
                 --create-namespace \
