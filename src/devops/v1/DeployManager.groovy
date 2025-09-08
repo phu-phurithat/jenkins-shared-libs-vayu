@@ -1,3 +1,5 @@
+package devops.v1
+
 def deployHelm(args) {
   // @param args: Map with keys:
   //  kubeconfigCred: String - Jenkins credential ID for kubeconfig file
