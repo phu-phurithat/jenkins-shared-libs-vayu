@@ -20,7 +20,7 @@ def ImportReport() {
           //Trivy Scan Dependency
           sh """
           curl -k -X POST "https://defectdojo.phurithat.site/api/v2/reimport-scan/" \
-            -H "Authorization: Token ${DOJO_KEY}" \
+            -H "Authorization: Token $DOJO_KEY" \
             -F scan_type="CycloneDX Scan" \
             -F test_title="CycloneDX Scan Dependency" \
             -F active="true" \
@@ -36,7 +36,7 @@ def ImportReport() {
         //Trivy Scan Image
         sh """
           curl -k -X POST "https://defectdojo.phurithat.site/api/v2/reimport-scan/" \
-            -H "Authorization: Token ${DOJO_KEY}" \
+            -H "Authorization: Token $DOJO_KEY" \
             -F scan_type="CycloneDX Scan" \
             -F test_title="CycloneDX Scan Image" \
             -F active="true" \
