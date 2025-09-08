@@ -98,7 +98,7 @@ def call(args) {
         String kubeconfigCred = config.environments[args.TARGET_ENV].cluster.toLowerCase()
         String namespace    = config.environments[args.TARGET_ENV].namespace.toLowerCase()
         String helmPath   = './helm-chart'   // path where your Helm chart lives
-        String helmRelease = args.deploymentRepo.tokenize('/').last().replace('.git', '').toLowerCase()
+        String helmRelease = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '').toLowerCase()
 
         dm.deployHelm(
           kubeconfigCred: kubeconfigCred,
