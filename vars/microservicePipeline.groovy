@@ -88,9 +88,15 @@ def call(args) {
   // ------------------- Run inside Kubernetes podTemplate -------------------
   podTemplate(yaml: pt.toString()) {
     node(POD_LABEL) {
-      stage('Deploy via Helm') {
-        container('helm') {
-          dir('deployment') {
+      dir('deployment') {
+        stage('Checkout Deployment Repository') {
+          dir('src') {
+            // Re-clone to ensure clean state inside pod
+            git url: args.DEPLOYMENT_REPO, branch: args.BRANCH
+          }
+        }
+        stage('Deploy via Helm') {
+          container('helm') {
             String kubeconfigCred = config.environments[args.TARGET_ENV].cluster.toLowerCase()
             String NAMESPACE    = config.environments[args.TARGET_ENV].namespace.toLowerCase()
             String HELM_PATH   = './helm-chart'   // path where your Helm chart lives
