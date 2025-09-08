@@ -119,13 +119,19 @@ def call(args) {
           }
 
           stage('Deploy via Helm') {
-            sh """
+            try {
+              withCredentials([file(credentialsId: kubeconfigCred, variable: 'KUBECONFIG_FILE')]) {
+                sh """
               export KUBECONFIG=${KUBECONFIG_FILE}
               helm upgrade --install ${HELM_RELEASE} ${HELM_PATH} \
                 --namespace ${NAMESPACE} \
                 --create-namespace \
                 --wait --timeout 5m
-            """
+              """
+              }
+            } catch (Exception e) {
+              error "Helm deploy failed: ${e}"
+            }
             // For demo purposes only
             sh "echo ${env}"
           }
