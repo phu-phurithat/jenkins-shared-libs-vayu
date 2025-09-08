@@ -6,7 +6,7 @@ package devops.v1
     
     env.TRIVY_BASE_URL = "http://trivy.trivy.svc.cluster.local:4954"
     env.DEFECTDOJO_BASE_URL = "http://defectdojo-django.defectdojo.svc.cluster.local"
-    env.DOJO_KEY = "defect-dojo-key"
+    env.DOJO_KEY = "defectdojo_api_key"
     env.HARBOR_CRED = "harbor-cred"
     env.JENKINS_CRED = "jenkins-cred"
     env.GITLAB_NONPROD_KEY = "gitlab-nonprod-key"
