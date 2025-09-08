@@ -26,7 +26,7 @@ def call(args) {
   // Helper classes
   def pt = new PodTemplate()
   def prep = new Preparer()
-  // def credManager = new CredManager(this)
+  def dm = new DeployManager()
   def config = [:]
   def properties = [:]
   String microserviceRepo = ''
@@ -89,54 +89,25 @@ def call(args) {
   podTemplate(yaml: pt.toString()) {
     node(POD_LABEL) {
       dir('deployment') {
-        String kubeconfigCred = config.environments[args.TARGET_ENV].cluster.toLowerCase()
-        String NAMESPACE    = config.environments[args.TARGET_ENV].namespace.toLowerCase()
-        String HELM_PATH   = './helm-chart'   // path where your Helm chart lives
-        String HELM_RELEASE = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '')
 
         stage('Checkout Deployment Repository') {
           // Re-clone to ensure clean state inside pod
           git url: args.DEPLOYMENT_REPO, branch: args.BRANCH
         }
 
-        container('helm') {
-          stage('Helm Lint & Dry-Run') {
-            try {
-              sh "helm lint ${HELM_PATH}"
+        String kubeconfigCred = config.environments[args.TARGET_ENV].cluster.toLowerCase()
+        String namespace    = config.environments[args.TARGET_ENV].namespace.toLowerCase()
+        String helmPath   = './helm-chart'   // path where your Helm chart lives
+        String helmRelease = args.deploymentRepo.tokenize('/').last().replace('.git', '').toLowerCase()
 
-              withCredentials([file(credentialsId: kubeconfigCred, variable: 'KUBECONFIG_FILE')]) {
-                sh """
-                export KUBECONFIG=${KUBECONFIG_FILE}
-                helm upgrade --install ${HELM_RELEASE} ${HELM_PATH} \
-                  --namespace ${NAMESPACE} \
-                  --create-namespace \
-                  --dry-run=client
-              """
-              }
-            } catch (Exception e) {
-              error "Helm dry-run failed: ${e}"
-            }
-          }
-
-          stage('Deploy via Helm') {
-            try {
-              withCredentials([file(credentialsId: kubeconfigCred, variable: 'KUBECONFIG_FILE')]) {
-                sh """
-              export KUBECONFIG=${KUBECONFIG_FILE}
-              helm upgrade --install ${HELM_RELEASE} ${HELM_PATH} \
-                --namespace ${NAMESPACE} \
-                --create-namespace \
-                --wait --timeout 5m
-              """
-              }
-            } catch (Exception e) {
-              error "Helm deploy failed: ${e}"
-            }
-            // For demo purposes only
-            // sh "printenv | sort"
-          }
-        }
+        dm.deployHelm(
+          kubeconfigCred: kubeconfigCred,
+          namespace: namespace,
+          helmPath: helmPath,
+          helmRelease: helmRelease
+        )
       }
+      
     }
   }
 }
