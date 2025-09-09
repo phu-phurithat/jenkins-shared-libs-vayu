@@ -3,34 +3,31 @@ package devops.v1
 def getConfigSummary(args, config, properties) {
     String appName = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '')
     String microserviceRepo = config.kinds.deployments[args.MICROSERVICE_NAME]
+    String fullImageName = if (args.TARGET_ENV in ['prod', 'production']) {
+        "${config.registry.prod}/${args.MICROSERVICE_NAME}:latest"
+    } else {
+        "${config.registry.nonprod}/${args.MICROSERVICE_NAME}:latest"
+    }
     echo """
-    ░█████                       ░██       ░██
-      ░██                        ░██
-      ░██   ░███████  ░████████  ░██    ░██░██░████████   ░███████
-      ░██  ░██    ░██ ░██    ░██ ░██   ░██ ░██░██    ░██ ░██
-░██   ░██  ░█████████ ░██    ░██ ░███████  ░██░██    ░██  ░███████
-░██   ░██  ░██        ░██    ░██ ░██   ░██ ░██░██    ░██        ░██
- ░██████    ░███████  ░██    ░██ ░██    ░██░██░██    ░██  ░███████
-
-#> ═════════════════════ Ⓘ Configuration Summary ═══════════════════════════════════
+#> ══════════════════════════ Ⓘ CONFIG SUMMARY ═════════════════════════════════════
 |
 |  ❯ Application       : ${appName}
 |  ❯ App ID            : ${config.app_id}
 |  ❯ Microservice      : ${args.MICROSERVICE_NAME}
 |  ❯ Microservice Repo : ${microserviceRepo}
-|  ❯ Branch            : ${args.BRANCH ?: 'main'}
+|  ❯ Branch            : ${args.BRANCH}
 |  ❯ Auto Deploy       : ${args.AUTO_DEPLOY in [true, 'true'] ? '✅' : '❌'}
 |
-#> ─────────────────────────── Build Summary ────────────────────────────────────────
+#> ───────────────────────────────── BUILD ──────────────────────────────────────────
 |
 |  ❯ Enabled     : ${properties.enable in [true, 'true'] ? '✅' : '❌'}
-|  ❯ Build Tool  : ${properties.build_tool ?: 'None'}
-|  ❯ Language    : ${properties.language ?: 'N/A'}
-|  ❯ Version     : ${properties.language_version ?: 'N/A'}
+|  ❯ Build Tool  : ${properties.build_tool}
+|  ❯ Language    : ${properties.language}
+|  ❯ Version     : ${properties.language_version}
 |  ❯ Build Image : ${properties.build_image in [true, 'true'] ? '✅' : '❌'}
-|  ❯ Full Image  : <FULL_IMAGE_NAME>
+|  ❯ Full Image  : ${fullImageName}
 |
-#> ─────────────────────────── Security Summary ─────────────────────────────────────
+#> ────────────────────────────── SECURITY SCAN ─────────────────────────────────────
 |
 |  ❯ Code Scan  : ${properties.security?.code in [true, 'true'] ? '✅' : '❌'}
 |  ❯ Secret Scan: ${properties.security?.secret in [true, 'true'] ? '✅' : '❌'}
@@ -41,19 +38,19 @@ def getConfigSummary(args, config, properties) {
 |     ❯ DAST Port : ${properties.security?.dast.port ?: 'N/A'}
 |     ❯ DAST Paths: ${properties.security?.dast.paths ?: 'N/A'}
 |
-#> ─────────────────────────── Registry Summary ─────────────────────────────────────
+#> ───────────────────────────────── REGISTRY ───────────────────────────────────────
 |
 |  ❯ Non-Prod Registry : ${config.registry?.nonprod ?: 'N/A'}
 |  ❯ Prod Registry     : ${config.registry?.prod ?: 'N/A'}
 |
-#> ─────────────────────────── Deployment Summary ───────────────────────────────────
+#> ──────────────────────────────── DEPLOYMENT ──────────────────────────────────────
 |
 |  ❯ Helm Version : ${config.helm?.version ?: 'N/A'}
 |  ❯ Target Env   : ${args.TARGET_ENV ?: 'N/A'}
 |  ❯ Namespace    : ${config.environments[args.TARGET_ENV]?.namespace ?: 'N/A'}
 |  ❯ Credential   : ${config.environments[args.TARGET_ENV]?.cluster ?: 'N/A'}
 |
-#> ════════════════════════════════════════════════════════════════════════════════
+#> ══════════════════════════════════════════════════════════════════════════════════
 
 """
 }
