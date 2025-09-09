@@ -28,7 +28,7 @@ def getConfigSummary(args, config) {
 |  ❯ Language    : ${config.language ?: 'N/A'}
 |  ❯ Version     : ${config.language_version ?: 'N/A'}
 |  ❯ Build Image : ${config.build_image in [true, 'true'] ? '✅' : '❌'}
-|  ❯ Full Image  : ${config.image?.name ?: 'N/A'}
+|  ❯ Full Image  : <FULL_IMAGE_NAME>
 |
 #> ─────────────────────────── Security Summary ─────────────────────────────────────
 |
