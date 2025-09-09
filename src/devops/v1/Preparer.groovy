@@ -65,6 +65,12 @@ def validateArguments(args) {
     if (!args?.MICROSERVICE_NAME) {
         errors << 'MICROSERVICE_NAME is required.'
     }
+    if (!args.BRANCH || !(args.BRANCH instanceof String)) {
+        errors << 'Invalid BRANCH or missing; must be a string.'
+    }
+    if (args.AUTO_DEPLOY in [true, 'true'] && !args?.TARGET_ENV) {
+        errors << 'TARGET_ENV is required when AUTO_DEPLOY is enabled.'
+    }
 
     if (errors) {
         error 'Invalid arguments: \n - ' + errors.join('\n - ')
