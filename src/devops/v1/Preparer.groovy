@@ -3,11 +3,9 @@ package devops.v1
 def getConfigSummary(args, config, properties) {
     String appName = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '')
     String microserviceRepo = config.kinds.deployments[args.MICROSERVICE_NAME]
-    String fullImageName = if (args.TARGET_ENV in ['prod', 'production']) {
-        "${config.registry.prod}/${args.MICROSERVICE_NAME}:latest"
-    } else {
+    String fullImageName = args.TARGET_ENV in ['prod', 'production'] ?
+        "${config.registry.prod}/${args.MICROSERVICE_NAME}:latest" :
         "${config.registry.nonprod}/${args.MICROSERVICE_NAME}:latest"
-    }
     echo """
 #> ══════════════════════════ Ⓘ CONFIG SUMMARY ═════════════════════════════════════
 |
