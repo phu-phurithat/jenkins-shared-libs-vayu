@@ -1,7 +1,7 @@
 import devops.v1.*
 
 def call(args) {
-  // args only contain DEPLOYMENT_REPO, TRIGGER_TOKEN, MICROSERVICE_NAME, BRANCH (optional), TARGET_ENV
+  // args only contain DEPLOYMENT_REPO, TRIGGER_TOKEN, MICROSERVICE_NAME, BRANCH (optional), AUTO_DEPLOY, TARGET_ENV
 
   // Constants
   final String SONAR_HOST        = 'http://sonarqube-sonarqube.sonarqube.svc.cluster.local:9000'
@@ -52,9 +52,8 @@ def call(args) {
         } else {
           error "Configuration file not found or empty at ${configPath}"
         }
-
         prep.validateConfig(config)
-        prep.getConfigSummary(args, config)
+        
       }
     }
 
@@ -77,6 +76,8 @@ def call(args) {
         } else {
           error "Properties file not found at ${propertiesPath}"
         }
+
+        prep.getConfigSummary(args, config, properties)
       }
     }
 

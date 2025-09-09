@@ -1,6 +1,6 @@
 package devops.v1
 
-def getConfigSummary(args, config) {
+def getConfigSummary(args, config, properties) {
     String appName = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '')
     String microserviceRepo = config.kinds.deployments[args.MICROSERVICE_NAME]
     echo """
@@ -23,23 +23,23 @@ def getConfigSummary(args, config) {
 |
 #> ─────────────────────────── Build Summary ────────────────────────────────────────
 |
-|  ❯ Enabled     : ${config.enable in [true, 'true'] ? '✅' : '❌'}
-|  ❯ Build Tool  : ${config.build_tool ?: 'None'}
-|  ❯ Language    : ${config.language ?: 'N/A'}
-|  ❯ Version     : ${config.language_version ?: 'N/A'}
-|  ❯ Build Image : ${config.build_image in [true, 'true'] ? '✅' : '❌'}
+|  ❯ Enabled     : ${properties.enable in [true, 'true'] ? '✅' : '❌'}
+|  ❯ Build Tool  : ${properties.build_tool ?: 'None'}
+|  ❯ Language    : ${properties.language ?: 'N/A'}
+|  ❯ Version     : ${properties.language_version ?: 'N/A'}
+|  ❯ Build Image : ${properties.build_image in [true, 'true'] ? '✅' : '❌'}
 |  ❯ Full Image  : <FULL_IMAGE_NAME>
 |
 #> ─────────────────────────── Security Summary ─────────────────────────────────────
 |
-|  ❯ Code Scan  : ${config.security?.code in [true, 'true'] ? '✅' : '❌'}
-|  ❯ Secret Scan: ${config.security?.secret in [true, 'true'] ? '✅' : '❌'}
-|  ❯ Dependency : ${config.security?.dependency in [true, 'true'] ? '✅' : '❌'}
-|  ❯ Image Scan : ${config.security?.image in [true, 'true'] ? '✅' : '❌'}
-|  ❯ EOL Check  : ${config.security?.eol in [true, 'true'] ? '✅' : '❌'}
-|  ❯ DAST       : ${config.security?.dast.enable in [true, 'true'] ? '✅' : '❌'}
-|     ❯ DAST Port : ${config.security?.dast.port ?: 'N/A'}
-|     ❯ DAST Paths: ${config.security?.dast.paths ?: 'N/A'}
+|  ❯ Code Scan  : ${properties.security?.code in [true, 'true'] ? '✅' : '❌'}
+|  ❯ Secret Scan: ${properties.security?.secret in [true, 'true'] ? '✅' : '❌'}
+|  ❯ Dependency : ${properties.security?.dependency in [true, 'true'] ? '✅' : '❌'}
+|  ❯ Image Scan : ${properties.security?.image in [true, 'true'] ? '✅' : '❌'}
+|  ❯ EOL Check  : ${properties.security?.eol in [true, 'true'] ? '✅' : '❌'}
+|  ❯ DAST       : ${properties.security?.dast.enable in [true, 'true'] ? '✅' : '❌'}
+|     ❯ DAST Port : ${properties.security?.dast.port ?: 'N/A'}
+|     ❯ DAST Paths: ${properties.security?.dast.paths ?: 'N/A'}
 |
 #> ─────────────────────────── Registry Summary ─────────────────────────────────────
 |
