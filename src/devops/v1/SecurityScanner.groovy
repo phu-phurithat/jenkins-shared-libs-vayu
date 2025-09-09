@@ -1,4 +1,19 @@
 package devops.v1
+
+def SorceCodeScan(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY) {
+     withCredentials([string(credentialsId: SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
+          sh """
+                        sonar-scanner \
+                          -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                          -Dsonar.sources=. \
+                          -Dsonar.host.url=${SONAR_HOST} \
+                          -Dsonar.login=${SONAR_TOKEN}
+                 curl -s -u "${SONAR_TOKEN}:" \
+                            "${SONAR_HOST}/api/issues/search?projectKey=${SONAR_PROJECT_KEY}" \
+                            -o sonarqube-report.json
+             """
+     }
+}
 def DependenciesScan() {
      sh """
               trivy fs . \
@@ -10,7 +25,6 @@ def DependenciesScan() {
                         --scanners vuln \
                         --format cyclonedx \
                         -o trivy_deps.json
-                        
 
           """
 }
@@ -25,7 +39,6 @@ def ImageScan(FULL_IMAGE) {
                         --scanners vuln \
                         --format cyclonedx \
                         -o trivy_image.json
-               ls -l "$WORKSPACE/trivy_image.json"
 
           """
 }

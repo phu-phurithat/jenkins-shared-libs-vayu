@@ -10,7 +10,7 @@ def call(args) {
   final String REGISTRY          = 'harbor.phurithat.site'
   final String DOCKER_CONFIG     = '/root/.docker/config.json'
   final String REPO              = 'boardgame_1'
-//  final String APP_REPO          = args.DEPLOYMENT_REPO.replace('-helm-charts.git', '-app.git')
+  //  final String APP_REPO          = args.DEPLOYMENT_REPO.replace('-helm-charts.git', '-app.git')
   final String COMPONENT_NAME    = args.DEPLOYMENT_REPO.tokenize('/').last().replace('-helm-charts.git', '')
   final String IMAGE_TAG         = env.BUILD_ID
   final String FULL_IMAGE        = "${REGISTRY}/${REPO}/${COMPONENT_NAME}:${IMAGE_TAG}"
@@ -43,8 +43,6 @@ def call(args) {
     if (!args?.DEPLOYMENT_REPO) {
       error 'DEPLOYMENT_REPO is required'
     }
-
-  
 
     stage('Checkout') {
       echo 'Checkout code from repository...'
@@ -80,38 +78,6 @@ def call(args) {
         git url: appRepo, branch: 'main'
       }
 
-      // stage('Compile&Scan source code') {
-      //   withCredentials([string(credentialsId: env.SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
-      //   if(fileExists("pom.xml")){
-      //     container('maven') {
-          
-      //       sh """
-      //          mvn clean install verify sonar:sonar \
-      //            -Dsonar.host.url=${SONAR_HOST} \
-      //            -Dsonar.login=${SONAR_TOKEN} \
-      //            -Dsonar.projectKey=${SONAR_PROJECT_KEY}
-
-      //         curl -s -u "${SONAR_TOKEN}:" \
-      //                  "${SONAR_HOST}/api/issues/search?projectKey=${SONAR_PROJECT_KEY}" \
-      //                  -o sonarqube-report.json
-      //        """
-      //     }
-      //   }else{
-          
-      //     if(fileExists("package.json")){
-      //       sh '''
-      //       npm install \
-      //       npm run test
-      //       '''
-      //   }
-      //   container('sonarqube'){
-
-      //     }
-      //     }
-      //   }
-
-      //   }
-     // echo "config lan =${config.build_tool}"
       String language = config.build_tool.toLowerCase()
       echo "LANGUAGE = ${language}"
 
@@ -119,74 +85,56 @@ def call(args) {
         if(language=="maven"){
         container('maven'){
            builder.Compile(SONAR_TOKEN,SONAR_HOST,SONAR_PROJECT_KEY,language)
+        }else
+          if(language=='node.js' || language=='nodejs' || language=='node'){
+            container('nodejs'){
+              builder.Compile(SONAR_TOKEN,SONAR_HOST,SONAR_PROJECT_KEY,language)
+            }
+          }else if(language=='python'){
+            container('python'){
+              builder.Compile(SONAR_TOKEN,SONAR_HOST,SONAR_PROJECT_KEY,language)
+            }
+          }else if(language=='go' || language=='golang'){
+            container('golang'){
+              builder.Compile(SONAR_TOKEN,SONAR_HOST,SONAR_PROJECT_KEY,language)
+            }
+          }
         }
       }
-        
+      if (language != 'maven') {
+        stage('Sorce Code Scan') {
+          container('sonarscanner') {
+
+            scanner.SorceCodeScan(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY)
+          }
+        }
       }
-      
-     
 
       stage('Build Docker Image') {
         container('buildkit') {
-          // sh """
-          //   buildctl \
-          //     --addr ${BUILDKIT_ADDR} \
-          //     build \
-          //     prune \
-          //     --frontend dockerfile.v0 \
-          //     --local context=. \
-          //     --local dockerfile=. \
-          //     --output type=image,name=${FULL_IMAGE},push=true,registry.config=${DOCKER_CONFIG} \
-          //     --export-cache type=inline \
-          //     --import-cache type=registry,ref=${REGISTRY}
-          // """
+
           builder.BuildImage(BUILDKIT_ADDR,FULL_IMAGE,DOCKER_CONFIG,REGISTRY)
         }
       }
       stage('Dependencies Scan') {
         container('trivy') {
-          // sh """
-          //   trivy fs . \
-          //   --server ${TRIVY_BASE_URL} \
-          //   --scanners vuln \
-          //   --offline-scan \
-          //   --format cyclonedx \
-          //   -o trivy_vuln.json
-          // """
+
           scanner.DependenciesScan()
         }
       }
       stage('Image Scan') {
         container('trivy') {
-          //sh "trivy image --severity HIGH,CRITICAL ${REGISTRY}/${REPO}/${COMPONENT_NAME}:${IMAGE_TAG} || true"
-          // sh """
-          //     trivy image ${FULL_IMAGE} \
-          //               --server ${TRIVY_BASE_URL} \
-          //               --timeout 10m \
-          //               --skip-db-update \
-          //               --severity CRITICAL,HIGH,MEDIUM \
-          //               --ignore-unfixed \
-          //               --scanners vuln \
-          //               --format cyclonedx \
-          //               -o trivy_image.json
 
-          // """
           scanner.ImageScan(FULL_IMAGE)
         }
       }
 
       stage('Import report') {
-        //  
+
         defectdojo.ImportReport()
       }
-    // stage('Deploy') {
-    //   container('kubectl') {
-    //     echo 'Deploying application to Kubernetes...'
-    //     withCredentials([file(credentialsId: 'boardgame-kubeconfig', variable: 'KUBECONFIG_FILE')]) {
-    //       sh 'kubectl --kubeconfig=${KUBECONFIG_FILE} apply -k k8s/'
-    //     }
-    //   }
-    // }
+
     }
   }
 }
+

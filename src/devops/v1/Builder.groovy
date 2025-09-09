@@ -14,9 +14,23 @@ def Compile(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, language) {
                        -o sonarqube-report.json
              """
             }
-        else if (config.build_tool.equalsIgnoreCase('node.js')) {
-        }}
+        else if (language == 'node.js' || language == 'nodejs' || language == 'node') {
+            sh '''
+            npm install \
+            npm run test
+            ''' 
+        }else if(language == 'python'){
+            sh '''
+            pip install -r requirements.txt
+            '''
+        }else if(language == 'go' || language == 'golang'){
+            sh '''
+            go mod tidy
+            go build
+            '''
     }
+    }
+}
 def BuildImage(BUILDKIT_ADDR, FULL_IMAGE, DOCKER_CONFIG, REGISTRY) {
     sh """
             buildctl \
