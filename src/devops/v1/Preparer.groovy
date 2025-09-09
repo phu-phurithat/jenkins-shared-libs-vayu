@@ -4,12 +4,55 @@ def getConfigSummary(args, config) {
     String appName = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '')
     String microserviceRepo = config.kinds.deployments[args.MICROSERVICE_NAME]
     echo """
+                    __             _    _
+                    \ \  ___ _ __ | | _(_)_ __  ___
+                        \ \/ _ \ '_ \| |/ / | '_ \/ __|
+                    /\_/ /  __/ | | |   <| | | | \__ \
+                    \___/ \___|_| |_|_|\_\_|_| |_|___/
+
 #> ═════════════════════ Ⓘ Configuration Summary ═══════════════════════════════════
-|  ❯ Application : ${appName}
-|  ❯ App ID     : ${config.app_id}
-|  ❯ Microservice : ${args.MICROSERVICE_NAME}
+|
+|  ❯ Application       : ${appName}
+|  ❯ App ID            : ${config.app_id}
+|  ❯ Microservice      : ${args.MICROSERVICE_NAME}
 |  ❯ Microservice Repo : ${microserviceRepo}
-#> ──────────────────────────────────────────────────────────────────────────────────
+|  ❯ Branch            : ${args.BRANCH ?: 'main'}
+|  ❯ Auto Deploy       : ${args.AUTO_DEPLOY in [true, 'true'] ? '✅' : '❌'}
+|
+#> ─────────────────────────── Build Summary ────────────────────────────────────────
+|
+|  ❯ Enabled     : ${config.enable in [true, 'true'] ? '✅' : '❌'}
+|  ❯ Build Tool  : ${config.build_tool ?: 'None'}
+|  ❯ Language    : ${config.language ?: 'N/A'}
+|  ❯ Version     : ${config.language_version ?: 'N/A'}
+|  ❯ Build Image : ${config.build_image in [true, 'true'] ? '✅' : '❌'}
+|  ❯ Full Image  : ${config.image?.name ?: 'N/A'}
+|
+#> ─────────────────────────── Security Summary ─────────────────────────────────────
+|
+|  ❯ Code Scan  : ${config.security?.code in [true, 'true'] ? '✅' : '❌'}
+|  ❯ Secret Scan: ${config.security?.secret in [true, 'true'] ? '✅' : '❌'}
+|  ❯ Dependency : ${config.security?.dependency in [true, 'true'] ? '✅' : '❌'}
+|  ❯ Image Scan : ${config.security?.image in [true, 'true'] ? '✅' : '❌'}
+|  ❯ EOL Check  : ${config.security?.eol in [true, 'true'] ? '✅' : '❌'}
+|  ❯ DAST       : ${config.security?.dast.enable in [true, 'true'] ? '✅' : '❌'}
+|     ❯ DAST Port : ${config.security?.dast.port ?: 'N/A'}
+|     ❯ DAST Paths: ${config.security?.dast.paths ?: 'N/A'}
+|
+#> ─────────────────────────── Registry Summary ─────────────────────────────────────
+|
+|  ❯ Non-Prod Registry : ${config.registry?.nonprod ?: 'N/A'}
+|  ❯ Prod Registry     : ${config.registry?.prod ?: 'N/A'}
+|
+#> ─────────────────────────── Deployment Summary ───────────────────────────────────
+|
+|  ❯ Helm Version : ${config.helm?.version ?: 'N/A'}
+|  ❯ Target Env   : ${args.TARGET_ENV ?: 'N/A'}
+|  ❯ Namespace    : ${config.environments[args.TARGET_ENV]?.namespace ?: 'N/A'}
+|  ❯ Credential   : ${config.environments[args.TARGET_ENV]?.cluster ?: 'N/A'}
+|
+#> ════════════════════════════════════════════════════════════════════════════════
+
 """
 }
 
