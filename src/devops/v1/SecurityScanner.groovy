@@ -10,6 +10,7 @@ def DependenciesScan() {
                         --scanners vuln \
                         --format cyclonedx \
                         -o trivy_deps.json
+                        
 
           """
 }
@@ -24,6 +25,7 @@ def ImageScan(FULL_IMAGE) {
                         --scanners vuln \
                         --format cyclonedx \
                         -o trivy_image.json
+               ls -l "$WORKSPACE/trivy_image.json"
 
           """
 }
