@@ -95,7 +95,7 @@ class PodTemplate implements Serializable {
     }
     addContainerIfMissing([
       name           : 'nodejs',
-      image          : 'node:${nodeVersion}',
+      image          : "node:${nodeVersion}",
       imagePullPolicy: 'Always',
       command        : ['cat'],
       tty            : true
