@@ -83,9 +83,10 @@ def call(args) {
 
       stage('Build'){
         if(language=="maven"){
-        container('maven'){
-           builder.Compile(SONAR_TOKEN,SONAR_HOST,SONAR_PROJECT_KEY,language)
-        }else
+          container('maven'){
+            builder.Compile(SONAR_TOKEN,SONAR_HOST,SONAR_PROJECT_KEY,language)
+          }
+        } else {
           if(language=='node.js' || language=='nodejs' || language=='node'){
             container('nodejs'){
               builder.Compile(SONAR_TOKEN,SONAR_HOST,SONAR_PROJECT_KEY,language)
