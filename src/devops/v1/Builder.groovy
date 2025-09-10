@@ -19,7 +19,7 @@ def Compile(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, language) {
         }else if(language == 'go' || language == 'golang'){
             sh '''
             go mod tidy
-            go build
+            go build -buildvcs=false
             '''
     }
     }
