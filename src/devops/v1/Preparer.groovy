@@ -142,3 +142,87 @@ def validateConfig(config) {
         echo '✅ Config validation passed!'
     }
 }
+
+def validateProperties(properties) {
+    def errors = []
+
+    def allowedProperties = [
+        enable: [true, false, 'true', 'false'],
+        build_tool: ['maven', 'gradle', 'npm', 'go', 'pip'],
+        language: [
+            java: ['8', '11', '17', '21'],
+            node: ['14', '16', '18', '20', '22', '24'],
+            go: ['1.18', '1.19', '1.20', '1.21', '1.22', '1.23', '1.24', '1.25'],
+            python: ['3.11.4', '3.12.0'],
+        ]
+        build_image: [true, false, 'true', 'false'],
+        security: [
+            code: [true, false, 'true', 'false', null],
+            secret: [true, false, 'true', 'false', null],
+            dependency: [true, false, 'true', 'false', null],
+            image: [true, false, 'true', 'false', null],
+            eol: [true, false, 'true', 'false', null],
+            dast: [
+                enable: [true, false, 'true', 'false', null],
+                port: Integer,
+                paths: String
+            ]
+        ]
+
+    ]
+    // Validate top-level properties
+    allowedProperties.each { key, allowedValues ->
+        if (properties[key] == null) {
+            errors << "Property '${key}' is required."
+        } else if (key == 'language') {
+            def lang = properties.language.toLowerCase()
+            if (!allowedValues.containsKey(lang)) {
+                errors << "Unsupported language '${properties.language}'. Supported: ${allowedValues.keySet().join(', ')}"
+            } else if (!allowedValues[lang].contains(properties.language_version?.toString())) {
+                errors << "Unsupported language_version '${properties.language_version}' for language '${lang}'. Supported: ${allowedValues[lang].join(', ')}"
+            }
+        } else if (key == 'security') {
+            if (!(properties.security instanceof Map)) {
+                errors << "Property 'security' must be a map."
+            } else {
+                allowedValues.each { secKey, secAllowedValues ->
+                    if (secKey == 'dast') {
+                        if (properties.security.dast) {
+                            if (properties.security.dast.enable == null) {
+                                errors << "Property 'security.dast.enable' is required."
+                            } else if (!secAllowedValues.enable.contains(properties.security.dast.enable)) {
+                                errors << "Property 'security.dast.enable' must be boolean."
+                            } else if (properties.security.dast.enable in [true, 'true']) {
+                                if (properties.security.dast.port == null) {
+                                    errors << "Property 'security.dast.port' is required when DAST is enabled."
+                                } else if (!(properties.security.dast.port instanceof Integer) || properties.security.dast.port <= 0) {
+                                    errors << "Property 'security.dast.port' must be a positive integer."
+                                }
+                                if (!properties.security.dast.paths) {
+                                    errors << "Property 'security.dast.paths' is required when DAST is enabled."
+                                } else if (!(properties.security.dast.paths instanceof String)) {
+                                    errors << "Property 'security.dast.paths' must be a string."
+                                }
+                            }
+                        }
+                    } else {
+                        if (properties.security[secKey] == null) {
+                            errors << "Property 'security.${secKey}' is required."
+                        } else if (!secAllowedValues.contains(properties.security[secKey])) {
+                            errors << "Property 'security.${secKey}' must be boolean."
+                        }
+                    }
+                }
+            }
+        } else {
+            if (!allowedValues.contains(properties[key])) {
+                errors << "Property '${key}' has invalid value '${properties[key]}'. Allowed: ${allowedValues.join(', ')}"
+            }
+        }
+    }
+    if (errors) {
+        error '❌ Properties validation failed:\n - ' + errors.join('\n - ')
+    } else {
+        echo '✅ Properties validation passed!'
+    }
+}
