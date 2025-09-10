@@ -103,7 +103,7 @@ def call(args) {
         }
       }
       stage('Sorce Code Scan') {
-        container('sonarscanner') {
+        container('sonarqube') {
           scanner.SorceCodeScan(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, language)
         }
       }
