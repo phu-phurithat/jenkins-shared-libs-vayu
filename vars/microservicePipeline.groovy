@@ -1,19 +1,13 @@
 import devops.v1.*
 
 def call(args) {
-  // args only contain DEPLOYMENT_REPO, TRIGGER_TOKEN
+  // args only contain DEPLOYMENT_REPO, TRIGGER_TOKEN, MICROSERVICE_NAME, BRANCH (optional), AUTO_DEPLOY, TARGET_ENV
 
   // Constants
   final String SONAR_HOST        = 'http://sonarqube-sonarqube.sonarqube.svc.cluster.local:9000'
   final String SONAR_PROJECT_KEY = 'java'
   final String BUILDKIT_ADDR     = 'tcp://buildkit-buildkit-service.buildkit.svc.cluster.local:1234'
-  final String REGISTRY          = 'harbor.phurithat.site'
   final String DOCKER_CONFIG     = '/root/.docker/config.json'
-  final String REPO              = 'boardgame_1'
-  //  final String APP_REPO          = args.DEPLOYMENT_REPO.replace('-helm-charts.git', '-app.git')
-  final String COMPONENT_NAME    = args.DEPLOYMENT_REPO.tokenize('/').last().replace('-helm-charts.git', '')
-  final String IMAGE_TAG         = env.BUILD_ID
-  final String FULL_IMAGE        = "${REGISTRY}/${REPO}/${COMPONENT_NAME}:${IMAGE_TAG}"
 
   // ENV
   // env.TRIVY_BASE_URL = 'http://trivy.trivy.svc.cluster.local:4954'
@@ -31,54 +25,84 @@ def call(args) {
   def config      = [:]
   // Helper classes
   def pt = new PodTemplate()
-  def prep = new Preparer(args)
   def credManager = new CredManager()
   def builder = new Builder()
   def scanner = new SecurityScanner()
   def defectdojo = new DefectDojoManager()
+  def prep = new Preparer()
+  def dm = new DeployManager()
+  def config = [:]
+  def properties = [:]
+  String microserviceRepo = ''
+  String fullImageName = ''
+  String imageTag = 'latest'
 
   // ------------------- Prep on a controller/agent -------------------
   node('master') { // change label as needed
     // Basic input validation
-    if (!args?.DEPLOYMENT_REPO) {
-      error 'DEPLOYMENT_REPO is required'
-    }
+    prep.validateArguments(args)
 
-    stage('Checkout') {
-      echo 'Checkout code from repository...'
-      git url: args.DEPLOYMENT_REPO, branch: 'main'
-    }
-
-    stage('Read Configuration from /"config.yaml/"') {
-      echo 'Getting Configuration'
-      String configPath = "${env.WORKSPACE}/config.yaml"
-      String configContent = readFile(file: configPath, encoding: 'UTF-8')
-
-      if (configContent?.trim()) {
-        config = readYaml(text: configContent)
-      } else {
-        error "Configuration file not found or empty at ${configPath}"
+    dir('deployment') {
+      stage('Checkout Deployment Repository') {
+        git url: args.DEPLOYMENT_REPO, branch: args.BRANCH ?: 'main'
       }
-      prep.injectConfig(config)
-      credManager.globalENV()
-      echo prep.getConfigSummary()
+
+      stage('Read Configuration from "config.yaml"') {
+        String configPath = './config.yaml'
+        String configContent = readFile(file: configPath, encoding: 'UTF-8')
+
+        if (configContent?.trim()) {
+          config = readYaml(text: configContent)
+        // echo config.toString()
+        } else {
+          error "Configuration file not found or empty at ${configPath}"
+        }
+        prep.validateConfig(config)
+        
+      }
     }
 
-    stage('Prepare Agent') {
-      pt.injectConfig(config)
+    dir('src') {
+      stage('Checkout Microservice Code for Preparation') {
+        microserviceRepo = config.kinds.deployments[args.MICROSERVICE_NAME]
+        if (!microserviceRepo) {
+          error "Microservice '${args.MICROSERVICE_NAME}' not found in configuration."
+        }
+
+        echo "Cloning microservice repository: ${microserviceRepo}"
+        git url: microserviceRepo, branch: 'main'
+      }
+
+      stage('Read Properties from "devops.properties.yaml"') {
+        String propertiesPath = './devops.properties.yaml'
+        if (fileExists(propertiesPath)) {
+          def fileContents = readFile(file: propertiesPath, encoding: 'UTF-8')
+          properties = readYaml(text: fileContents)
+        } else {
+          error "Properties file not found at ${propertiesPath}"
+        }
+
+        String fullImageName = args.TARGET_ENV in ['prod', 'production'] ?
+        "${config.registry.prod}/${args.MICROSERVICE_NAME}:${imageTag}" :
+        "${config.registry.nonprod}/${args.MICROSERVICE_NAME}:${imageTag}"
+        prep.getConfigSummary(args, config, properties, fullImageName)
+      }
     }
+
+      stage('Prepare Agent') {
+        pt.injectConfig(properties, args)
+      }
   }
 
   // ------------------- Run inside Kubernetes podTemplate -------------------
   podTemplate(yaml: pt.toString()) {
     node(POD_LABEL) {
-      stage('Checkout') {
-        echo 'Checkout code from repository...'
-        String appRepo = args.DEPLOYMENT_REPO.replace('-helm-charts.git', '-app.git')
-        git url: appRepo, branch: 'main'
+      stage('Checkout Source Code Repository') {
+        // Re-clone to ensure clean state inside pod
+        git url: microserviceRepo, branch: args.BRANCH
       }
 
-      String language = config.build_tool.toLowerCase()
+      String language = properties.build_tool.toLowerCase()
       echo "LANGUAGE = ${language}"
 
       stage('Build'){
@@ -111,7 +135,7 @@ def call(args) {
       stage('Build Docker Image') {
         container('buildkit') {
 
-          builder.BuildImage(BUILDKIT_ADDR,FULL_IMAGE,DOCKER_CONFIG,REGISTRY)
+          builder.BuildImage(BUILDKIT_ADDR,fullImageName,DOCKER_CONFIG)
         }
       }
       stage('Dependencies Scan') {
@@ -132,6 +156,25 @@ def call(args) {
         defectdojo.ImportReport()
       }
 
+      dir('deployment') {
+
+        stage('Checkout Deployment Repository') {
+          // Re-clone to ensure clean state inside pod
+          git url: args.DEPLOYMENT_REPO, branch: args.BRANCH
+        }
+
+        String kubeconfigCred = config.environments[args.TARGET_ENV].cluster.toLowerCase()
+        String namespace    = config.environments[args.TARGET_ENV].namespace.toLowerCase()
+        String helmPath   = './helm-chart'   // path where your Helm chart lives
+        String helmRelease = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '').toLowerCase()
+
+        dm.deployHelm(
+          kubeconfigCred: kubeconfigCred,
+          namespace: namespace,
+          helmPath: helmPath,
+          helmRelease: helmRelease
+        )
+      }
     }
   }
 }

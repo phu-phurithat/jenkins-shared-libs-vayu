@@ -24,7 +24,8 @@ def Compile(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, language) {
     }
     }
 }
-def BuildImage(BUILDKIT_ADDR, FULL_IMAGE, DOCKER_CONFIG, REGISTRY) {
+def BuildImage(BUILDKIT_ADDR, FULL_IMAGE, DOCKER_CONFIG) {
+    String REGISTRY_HOST = FULL_IMAGE.tokenize('/')[0]
     sh """
             buildctl \
               --addr ${BUILDKIT_ADDR} \
@@ -35,6 +36,6 @@ def BuildImage(BUILDKIT_ADDR, FULL_IMAGE, DOCKER_CONFIG, REGISTRY) {
               --local dockerfile=. \
               --output type=image,name=${FULL_IMAGE},push=true,registry.config=${DOCKER_CONFIG} \
               --export-cache type=inline \
-              --import-cache type=registry,ref=${REGISTRY}
+              --import-cache type=registry,ref=${REGISTRY_HOST}
           """
 }
