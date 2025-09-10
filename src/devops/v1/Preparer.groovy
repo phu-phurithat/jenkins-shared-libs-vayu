@@ -165,7 +165,7 @@ def validateProperties(properties) {
             dast: [
                 enable: [true, false, 'true', 'false', null],
                 port: Integer,
-                paths: String
+                paths: List<String>,
             ],
         ],
     ]
@@ -194,13 +194,23 @@ def validateProperties(properties) {
                             } else if (properties.security.dast.enable in [true, 'true']) {
                                 if (properties.security.dast.port == null) {
                                     errors << "Property 'security.dast.port' is required when DAST is enabled."
-                                } else if (!(properties.security.dast.port instanceof Integer) || properties.security.dast.port <= 0) {
+                                } 
+                                if (properties.security.dast.port instanceof String ) {
+                                    try {
+                                        int port = properties.security.dast.port.toInteger()
+                                        if (port <= 0) {
+                                            errors << "Property 'security.dast.port' must be a positive integer."
+                                        }
+                                    } catch (Exception e) {
+                                        errors << "Property 'security.dast.port' must be a positive integer."
+                                    }
+                                } else if (properties.security.dast.port instanceof Integer && properties.security.dast.port <= 0) {
                                     errors << "Property 'security.dast.port' must be a positive integer."
                                 }
                                 if (!properties.security.dast.paths) {
                                     errors << "Property 'security.dast.paths' is required when DAST is enabled."
-                                } else if (!(properties.security.dast.paths instanceof String)) {
-                                    errors << "Property 'security.dast.paths' must be a string."
+                                } else if (!(properties.security.dast.paths instanceof List<String>)) {
+                                    errors << "Property 'security.dast.paths' must be a list of strings."
                                 }
                             }
                         }
