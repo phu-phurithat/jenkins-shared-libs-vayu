@@ -62,7 +62,7 @@ class PodTemplate implements Serializable {
   PodTemplate addMaven(String javaVersion) {
     javaVersion = javaVersion.tokenize('.').first() // eg. 21.2.0 -> 21
     if (javaVersion != '8' || javaVersion != '11' || javaVersion != '17' || javaVersion != '21') {
-      return "Unsupported Java version for Maven: ${javaVersion}. Supported: 8, 11, 17, 21."
+      return { error "Unsupported Java version for Maven: ${javaVersion}. Supported: 8, 11, 17, 21." }
     }
     addContainerIfMissing([
       name           : 'maven',
