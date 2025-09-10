@@ -25,8 +25,6 @@ class PodTemplate implements Serializable {
     // Build tool container
     String tool = (config.build_tool ?: '').toString().toLowerCase()
     String languageVersion = (config.language_version ?: '').toString().toLowerCase()
-    println "Configuring pod with build tool: ${tool}, language version: ${languageVersion}"
-    echo "Configuring pod with build tool: ${tool}, language version: ${languageVersion}"
     switch (tool) {
       case 'maven':  addMaven(languageVersion);  break;
       case 'go':     addGo(languageVersion);     break;
@@ -84,8 +82,8 @@ class PodTemplate implements Serializable {
 
   PodTemplate addNode(String nodeVersion) {
     nodeVersion = nodeVersion.tokenize('.').first()
-    if (nodeVersion != '24' || nodeVersion != '22' || nodeVersion != '20') {
-      return { error "Unsupported Node.js version: ${nodeVersion}. Supported: 24, 22, 20." }
+    if (!(nodeVersion in ['24','22','20'])) {
+      error "Unsupported Node.js version: ${nodeVersion}. Supported: 24, 22, 20."
     }else {
       if (nodeVersion == '24') {
         nodeVersion = '24.7.0'
