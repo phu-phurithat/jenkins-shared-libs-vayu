@@ -30,9 +30,9 @@ class PodTemplate implements Serializable {
       case 'go':     addGo(languageVersion);     break;
       case 'pip': addPython(languageVersion); break;
       case 'gradle': addGradle(languageVersion);  break;
-      case 'npm':    
-        addNode(languageVersion);
-        println "Added Node.js container with version ${languageVersion}";
+      case 'npm':
+        addNode(languageVersion)
+        println "Added Node.js container with version ${languageVersion}"
         break;
       default:
         // no-op; still usable as a generic agent pod
