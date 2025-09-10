@@ -63,9 +63,6 @@ class PodTemplate implements Serializable {
 
   PodTemplate addMaven(String javaVersion) {
     javaVersion = javaVersion.tokenize('.').first() // eg. 21.2.0 -> 21
-    if (javaVersion != '8' || javaVersion != '11' || javaVersion != '17' || javaVersion != '21') {
-      return { error "Unsupported Java version for Maven: ${javaVersion}. Supported: 8, 11, 17, 21." }
-    }
     addContainerIfMissing([
       name           : 'maven',
       image          : "maven:3.9.8-eclipse-temurin-${javaVersion}",
@@ -82,10 +79,6 @@ class PodTemplate implements Serializable {
 
   PodTemplate addNode(String nodeVersion) {
     nodeVersion = nodeVersion.tokenize('.').first()
-
-    if (!(nodeVersion in ['24', '22', '20'])) {
-    // echo "Unsupported Node.js version: ${nodeVersion}. Supported: 24, 22, 20."
-    }
 
     if (nodeVersion == '24') {
       nodeVersion = '24.7.0'
@@ -107,11 +100,11 @@ class PodTemplate implements Serializable {
   }
 
   PodTemplate addGo(String goVersion) {
-    goVersion = goVersion.tokenize('.').first() // eg. 1.23
-   
+    goVersion = goVersion.tokenize('.') // eg. 1.23 -> [1, 23]
+    String goImage = "golang:${goVersion[0]}.${goVersion[1]}-alpine"
     addContainerIfMissing([
       name           : 'golang',
-      image          : "golang:${goVersion}-alpine",
+      image          : goImage,
       imagePullPolicy: 'Always',
       command        : ['cat'],
       tty            : true,
@@ -131,10 +124,6 @@ class PodTemplate implements Serializable {
   }
   PodTemplate addGradle(String javaVersion) {
     javaVersion = javaVersion.tokenize('.').first().toString() // eg. 21.2.0 -> 21
-
-    if (javaVersion != '8' && javaVersion != '11' && javaVersion != '17' && javaVersion != '21') {
-      error "Unsupported Java version for Gradle: ${javaVersion}. Supported: 8, 11, 17, 21." 
-    }
 
     String gradleImage = "gradle:jdk${javaVersion}"
     addContainerIfMissing([
