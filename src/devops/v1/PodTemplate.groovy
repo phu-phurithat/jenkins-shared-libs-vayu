@@ -33,7 +33,7 @@ class PodTemplate implements Serializable {
       case 'npm': addNode(languageVersion); break;
       default:
         // no-op; still usable as a generic agent pod
-        break;
+        break
     }
 
     // If we build/push images, add buildkit + secret volume
@@ -82,23 +82,24 @@ class PodTemplate implements Serializable {
 
   PodTemplate addNode(String nodeVersion) {
     nodeVersion = nodeVersion.tokenize('.').first()
-    if (!(nodeVersion in ['24','22','20'])) {
-      echo "Unsupported Node.js version: ${nodeVersion}. Supported: 24, 22, 20."
-    }else {
-      if (nodeVersion == '24') {
-        nodeVersion = '24.7.0'
-      }else if (nodeVersion == '22') {
-        nodeVersion = '22.19.0'
-      }else if (nodeVersion == '20') {
-          nodeVersion = '20.19.5'
-      }
+    if (!(nodeVersion in ['24', '22', '20'])) {
+    // echo "Unsupported Node.js version: ${nodeVersion}. Supported: 24, 22, 20."
     }
+    if (nodeVersion == '24') {
+      nodeVersion = '24.7.0'
+    }else if (nodeVersion == '22') {
+      nodeVersion = '22.19.0'
+    }else if (nodeVersion == '20') {
+      nodeVersion = '20.19.5'
+    }
+    String nodeImage = "node:${nodeVersion}"
+
     addContainerIfMissing([
       name           : 'nodejs',
-      image          : "node:${nodeVersion}",
+      image          : nodeImage,
       imagePullPolicy: 'Always',
       command        : ['cat'],
-      tty            : true,
+      tty            : true
     ])
     return this
   }
@@ -121,7 +122,7 @@ class PodTemplate implements Serializable {
       image          : 'python:3.12',
       imagePullPolicy: 'Always',
       command        : ['cat'],
-      tty            : true,
+      tty            : true
     ])
     return this
   }
