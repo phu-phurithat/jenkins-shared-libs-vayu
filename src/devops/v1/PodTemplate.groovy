@@ -83,7 +83,7 @@ class PodTemplate implements Serializable {
   PodTemplate addNode(String nodeVersion) {
     nodeVersion = nodeVersion.tokenize('.').first()
     if (!(nodeVersion in ['24','22','20'])) {
-      error "Unsupported Node.js version: ${nodeVersion}. Supported: 24, 22, 20."
+      echo "Unsupported Node.js version: ${nodeVersion}. Supported: 24, 22, 20."
     }else {
       if (nodeVersion == '24') {
         nodeVersion = '24.7.0'
@@ -98,7 +98,7 @@ class PodTemplate implements Serializable {
       image          : "node:${nodeVersion}",
       imagePullPolicy: 'Always',
       command        : ['cat'],
-      tty            : true
+      tty            : true,
     ])
     return this
   }
@@ -110,7 +110,7 @@ class PodTemplate implements Serializable {
       image          : 'golang:1.23',
       imagePullPolicy: 'Always',
       command        : ['cat'],
-      tty            : true
+      tty            : true,
     ])
     return this
   }
@@ -121,7 +121,7 @@ class PodTemplate implements Serializable {
       image          : 'python:3.12',
       imagePullPolicy: 'Always',
       command        : ['cat'],
-      tty            : true
+      tty            : true,
     ])
     return this
   }
