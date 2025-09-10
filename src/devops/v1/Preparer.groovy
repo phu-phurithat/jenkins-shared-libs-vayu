@@ -154,7 +154,7 @@ def validateProperties(properties) {
             node: ['14', '16', '18', '20', '22', '24'],
             go: ['1.18', '1.19', '1.20', '1.21', '1.22', '1.23', '1.24', '1.25'],
             python: ['3.11.4', '3.12.0'],
-        ]
+        ],
         build_image: [true, false, 'true', 'false'],
         security: [
             code: [true, false, 'true', 'false', null],
@@ -166,9 +166,8 @@ def validateProperties(properties) {
                 enable: [true, false, 'true', 'false', null],
                 port: Integer,
                 paths: String
-            ]
-        ]
-
+            ],
+        ],
     ]
     // Validate top-level properties
     allowedProperties.each { key, allowedValues ->
