@@ -1,7 +1,9 @@
 import devops.v1.*
 
 def call(args) {
-  // args only contain DEPLOYMENT_REPO, TRIGGER_TOKEN, MICROSERVICE_NAME, BRANCH (optional), AUTO_DEPLOY, TARGET_ENV
+  // args only contain 
+  // DEPLOYMENT_REPO, TRIGGER_TOKEN, MICROSERVICE_NAME, BRANCH (optional), AUTO_DEPLOY, TARGET_ENV
+  // IMAGE_TAG (optional)
 
   // Constants
   final String SONAR_HOST        = 'http://sonarqube-sonarqube.sonarqube.svc.cluster.local:9000'
@@ -9,19 +11,6 @@ def call(args) {
   final String BUILDKIT_ADDR     = 'tcp://buildkit-buildkit-service.buildkit.svc.cluster.local:1234'
   final String DOCKER_CONFIG     = '/root/.docker/config.json'
 
-  // ENV
-  // env.TRIVY_BASE_URL = 'http://trivy.trivy.svc.cluster.local:4954'
-  // env.DEFECTDOJO_BASE_URL = 'https://defectdojo.phurithat.site'
-  // env.DOJO_KEY = 'defectdojo_api_key'
-  // env.SONAR_TOKEN =  'sonar_token'
-  // env.HARBOR_CRED = 'harbor-cred'
-  // env.JENKINS_CRED = 'jenkins-cred'
-  // env.GITLAB_NONPROD_KEY = 'gitlab-nonprod-key'
-  // env.GITLAB_PROD_KEY = 'gitlab-prod-key'
-  // env.HELM_PATH = 'vayu-helm'
-  // env.HELM_NONPROD_REPO = 'https://gitlab.devopsnonprd.vayuktbcs/api/v4/projects/7410/packages/helm/stable'
-  // env.OCP_NONPROD_AGENT = 'ocp-nonprod-agent'
-  // env.OCP_PROD_AGENT = 'ocp-prod-agent'
   // Helper classes
   def pt = new PodTemplate()
   def credManager = new CredManager()
@@ -34,7 +23,7 @@ def call(args) {
   def properties = [:]
   String microserviceRepo = ''
   String fullImageName = ''
-  String imageTag = 'latest'
+  String imageTag = ''
 
 
   // ------------------- Prep on a controller/agent -------------------
@@ -83,9 +72,11 @@ def call(args) {
           error "Properties file not found at ${propertiesPath}"
         }
 
+        imageTag = args.IMAGE_TAG ?: sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
         fullImageName = args.TARGET_ENV in ['prod', 'production'] ?
         "${config.registry.prod}/${args.MICROSERVICE_NAME}:${imageTag}" :
         "${config.registry.nonprod}/${args.MICROSERVICE_NAME}:${imageTag}"
+        
         prep.getConfigSummary(args, config, properties, fullImageName)
       }
     }
@@ -98,84 +89,26 @@ def call(args) {
   // ------------------- Run inside Kubernetes podTemplate -------------------
   podTemplate(yaml: pt.toString()) {
     node(POD_LABEL) {
-      stage('Checkout Source Code Repository') {
-        // Re-clone to ensure clean state inside pod
-        git url: microserviceRepo, branch: args.BRANCH
-      }
 
-      String language = properties.build_tool.toLowerCase()
-      echo "LANGUAGE = ${language}"
+      // dir('deployment') {
 
-      stage('Build'){
-        if(language=="maven"){
-          container('maven'){
-            builder.Compile(SONAR_TOKEN,SONAR_HOST,SONAR_PROJECT_KEY,language)
-          }
-        } else {
-          if(language=='node.js' || language=='nodejs' || language=='node'){
-            container('nodejs'){
-              builder.Compile(SONAR_TOKEN,SONAR_HOST,SONAR_PROJECT_KEY,language)
-            }
-          }else if(language=='python'){
-            container('python'){
-              builder.Compile(SONAR_TOKEN,SONAR_HOST,SONAR_PROJECT_KEY,language)
-            }
-          }else if(language=='go' || language=='golang'){
-            container('golang'){
-              builder.Compile(SONAR_TOKEN,SONAR_HOST,SONAR_PROJECT_KEY,language)
-            }
-          }
-        }
-      }
-      stage('Sorce Code Scan') {
-        container('sonarqube') {
-          scanner.SorceCodeScan(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, language)
-        }
-      }
+      //   stage('Checkout Deployment Repository') {
+      //     // Re-clone to ensure clean state inside pod
+      //     git url: args.DEPLOYMENT_REPO, branch: args.BRANCH
+      //   }
 
-      stage('Build Docker Image') {
-        container('buildkit') {
+      //   String kubeconfigCred = config.environments[args.TARGET_ENV].cluster.toLowerCase()
+      //   String namespace    = config.environments[args.TARGET_ENV].namespace.toLowerCase()
+      //   String helmPath   = './helm-chart'   // path where your Helm chart lives
+      //   String helmRelease = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '').toLowerCase()
 
-          builder.BuildImage(BUILDKIT_ADDR,fullImageName,DOCKER_CONFIG)
-        }
-      }
-      stage('Dependencies Scan') {
-        container('trivy') {
-
-          scanner.DependenciesScan()
-        }
-      }
-      stage('Image Scan') {
-        container('trivy') {
-
-          scanner.ImageScan(fullImageName)
-        }
-      }
-
-      stage('Import report') {
-
-        defectdojo.ImportReport()
-      }
-
-      dir('deployment') {
-
-        stage('Checkout Deployment Repository') {
-          // Re-clone to ensure clean state inside pod
-          git url: args.DEPLOYMENT_REPO, branch: args.BRANCH
-        }
-
-        String kubeconfigCred = config.environments[args.TARGET_ENV].cluster.toLowerCase()
-        String namespace    = config.environments[args.TARGET_ENV].namespace.toLowerCase()
-        String helmPath   = './helm-chart'   // path where your Helm chart lives
-        String helmRelease = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '').toLowerCase()
-
-        dm.deployHelm(
-          kubeconfigCred: kubeconfigCred,
-          namespace: namespace,
-          helmPath: helmPath,
-          helmRelease: helmRelease
-        )
-      }
+      //   dm.deployHelm(
+      //     kubeconfigCred: kubeconfigCred,
+      //     namespace: namespace,
+      //     helmPath: helmPath,
+      //     helmRelease: helmRelease
+      //   )
+      // }
     }
   }
 }
