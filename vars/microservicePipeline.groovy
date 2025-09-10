@@ -103,29 +103,15 @@ def call(args) {
         git url: microserviceRepo, branch: args.BRANCH
       }
 
-      String language = properties.build_tool.toLowerCase()
-      echo "LANGUAGE = ${language}"
+      String build_tool = properties.build_tool.toLowerCase()
+      String language = properties.language.toLowerCase()
+      echo "build_tool = ${build_tool}"
 
       stage('Build'){
-        if(language=="maven"){
-          container('maven'){
-            builder.Compile(SONAR_TOKEN,SONAR_HOST,SONAR_PROJECT_KEY,language)
-          }
-        } else {
-          if(language=='node.js' || language=='nodejs' || language=='node'){
-            container('nodejs'){
-              builder.Compile(SONAR_TOKEN,SONAR_HOST,SONAR_PROJECT_KEY,language)
-            }
-          }else if(language=='python'){
-            container('python'){
-              builder.Compile(SONAR_TOKEN,SONAR_HOST,SONAR_PROJECT_KEY,language)
-            }
-          }else if(language=='go' || language=='golang'){
-            container('golang'){
-              builder.Compile(SONAR_TOKEN,SONAR_HOST,SONAR_PROJECT_KEY,language)
-            }
+       builder.compile(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, build_tool)
           }
         }
+      }
       }
       stage('Sorce Code Scan') {
         container('sonarqube') {
@@ -176,7 +162,4 @@ def call(args) {
           helmRelease: helmRelease
         )
       }
-    }
-  }
-}
-
+    

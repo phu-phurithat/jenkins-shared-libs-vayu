@@ -1,29 +1,40 @@
 package devops.v1
 
-def Compile(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, language) {
-    withCredentials([string(credentialsId: SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
-            if (language == 'maven') {
-            sh """
+def Compile(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, build_tool) {
+
+        withCredentials([string(credentialsId: SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
+            if (build_tool == 'maven') {
+                container('maven') {
+                    sh '''
                mvn clean install verify
-             """
+             '''
+                }
             }
-        else if (language == 'node.js' || language == 'nodejs' || language == 'node') {
-            sh '''
+        else if (build_tool == 'npm' ) {
+                container('nodejs') {
+                    sh '''
             npm install \
             npm run test
-            ''' 
-        }else if(language == 'python'){
-            sh '''
+            '''
+                }
+        }else if (build_tool == 'pip') {
+                container('python') {
+                    sh '''
             pip install -r requirements.txt
             '''
-        }else if(language == 'go' || language == 'golang'){
-            sh '''
+                }
+        }else if (build_tool == 'go' ) {
+                container('golang') {
+                    sh '''
             go mod tidy
             go build -buildvcs=false
+
             '''
+                }
+        }
+        }
     }
-    }
-}
+
 def BuildImage(BUILDKIT_ADDR, FULL_IMAGE, DOCKER_CONFIG) {
     String REGISTRY_HOST = FULL_IMAGE.tokenize('/')[0]
     sh """

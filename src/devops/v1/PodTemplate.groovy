@@ -24,11 +24,13 @@ class PodTemplate implements Serializable {
   PodTemplate injectConfig(config, args) {
     // Build tool container
     String tool = (config.build_tool ?: '').toString().toLowerCase()
+    Strinf languageVersion = (config.language_version ?: '').toString().toLowerCase()
     switch (tool) {
-      case 'maven':  addMaven();  break
-      case 'nodejs': addNode();   break
-      case 'go':     addGo();     break
-      case 'python': addPython(); break
+      case 'maven':  addMaven(languageVersion);  break
+      case 'go':     addGo(languageVersion);     break
+      case 'pip': addPython(languageVersion); break
+      case 'gradle': addGradle(languageVersion);  break
+      case 'npm':    addNode(languageVersion);   break
       default:
         // no-op; still usable as a generic agent pod
         break
@@ -82,10 +84,18 @@ class PodTemplate implements Serializable {
     nodeVersion = nodeVersion.tokenize('.').first() 
     if(nodeVersion != '24' || nodeVersion != '22' || nodeVersion != '20'){
       return { error "Unsupported Node.js version: ${nodeVersion}. Supported: 24, 22, 20." }
+    }else{
+      if(nodeVersion == '24'){
+        nodeVersion = '24.7.0'
+      }else if(nodeVersion == '22'){
+        nodeVersion = '22.19.0' 
+    }else{
+        nodeVersion = '20.19.5'
+      }
     }
     addContainerIfMissing([
       name           : 'nodejs',
-      image          : 'node:20',
+      image          : 'node:${nodeVersion}',
       imagePullPolicy: 'Always',
       command        : ['cat'],
       tty            : true
