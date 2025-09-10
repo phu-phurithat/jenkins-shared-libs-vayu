@@ -25,14 +25,14 @@ class PodTemplate implements Serializable {
     // Build tool container
     String tool = (config.build_tool ?: '').toString().toLowerCase()
     String languageVersion = (config.language_version ?: '').toString().toLowerCase()
+    println "Configuring pod with build tool: ${tool}, language version: ${languageVersion}"
+    echo "Configuring pod with build tool: ${tool}, language version: ${languageVersion}"
     switch (tool) {
       case 'maven':  addMaven(languageVersion);  break;
       case 'go':     addGo(languageVersion);     break;
       case 'pip': addPython(languageVersion); break;
       case 'gradle': addGradle(languageVersion);  break;
-      case 'npm': println "Added ${tool} Node.js container with version ${languageVersion}"
-        addNode(languageVersion)
-        break;
+      case 'npm': addNode(languageVersion); break;
       default:
         // no-op; still usable as a generic agent pod
         break;
