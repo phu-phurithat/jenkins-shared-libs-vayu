@@ -129,10 +129,12 @@ class PodTemplate implements Serializable {
     return this
   }
   PodTemplate addGradle(String javaVersion) {
-    javaVersion = javaVersion.tokenize('.').first() // eg. 21.2.0 -> 21
-    if (javaVersion != '8' || javaVersion != '11' || javaVersion != '17' || javaVersion != '21') {
-      // return { error "Unsupported Java version for Gradle: ${javaVersion}. Supported: 8, 11, 17, 21." }
+    javaVersion = javaVersion.tokenize('.').first().toString() // eg. 21.2.0 -> 21
+
+    if (javaVersion != '8' && javaVersion != '11' && javaVersion != '17' && javaVersion != '21') {
+      error "Unsupported Java version for Gradle: ${javaVersion}. Supported: 8, 11, 17, 21." 
     }
+
     String gradleImage = "gradle:jdk${javaVersion}"
     addContainerIfMissing([
       name           : 'gradle',
