@@ -22,12 +22,19 @@ def Compile(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, build_tool) {
                 '''
             }
         }else if (build_tool == 'go' ) {
-            container('golang') {
-                sh '''
-                    go mod tidy
-                    go build -buildvcs=false
-                '''
-            }
+                container('golang') {
+                    sh '''
+            go mod tidy
+            go build -buildvcs=false
+
+            '''
+                }
+        }else if (build_tool == 'gradle' ) {
+                container('gradle') {
+                    sh '''
+            gradle build
+            '''
+                }
         }
     }
 }
