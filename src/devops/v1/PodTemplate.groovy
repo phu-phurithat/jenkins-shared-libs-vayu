@@ -89,7 +89,7 @@ class PodTemplate implements Serializable {
         nodeVersion = '24.7.0'
       }else if(nodeVersion == '22'){
         nodeVersion = '22.19.0' 
-    }else{
+    }else if(nodeVersion = '20'){
         nodeVersion = '20.19.5'
       }
     }
