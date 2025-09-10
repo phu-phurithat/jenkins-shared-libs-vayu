@@ -36,10 +36,12 @@ def call(args) {
   String fullImageName = ''
   String imageTag = 'latest'
 
+
   // ------------------- Prep on a controller/agent -------------------
   node('master') { // change label as needed
     // Basic input validation
     prep.validateArguments(args)
+    credManager.globalENV()
 
     dir('deployment') {
       stage('Checkout Deployment Repository') {
@@ -146,7 +148,7 @@ def call(args) {
       stage('Image Scan') {
         container('trivy') {
 
-          scanner.ImageScan(FULL_IMAGE)
+          scanner.ImageScan(fullImageName)
         }
       }
 
