@@ -20,7 +20,8 @@ class PodTemplate implements Serializable {
       ]]
   ]
   ]
-  PodTemplate injectConfig(config) {
+
+  PodTemplate injectConfig(config, args) {
     // Build tool container
     String tool = (config.build_tool ?: '').toString().toLowerCase()
     switch (tool) {
@@ -50,18 +51,18 @@ class PodTemplate implements Serializable {
     if (sec.secret in [true, 'true']) {
       addGitLeaks()
     }
-    return this
 
-    if (config.auto_deploy in [true, 'true']) {
+    if (args.AUTO_DEPLOY in [true, 'true']) {
       addKubectl()
       addHelm()
     }
+    return this
   }
 
   PodTemplate addMaven(String javaVersion) {
     javaVersion = javaVersion.tokenize('.').first() // eg. 21.2.0 -> 21
     if (javaVersion != '8' || javaVersion != '11' || javaVersion != '17' || javaVersion != '21') {
-      return error "Unsupported Java version for Maven: ${javaVersion}. Supported: 8, 11, 17, 21."
+      return { error "Unsupported Java version for Maven: ${javaVersion}. Supported: 8, 11, 17, 21." }
     }
     addContainerIfMissing([
       name           : 'maven',
@@ -141,10 +142,10 @@ class PodTemplate implements Serializable {
       imagePullPolicy: 'Always',
       command        : ['cat'],
       tty            : true,
-      // resources      : [
-      //   requests: [ cpu: '500m', memory: '2Gi', 'ephemeral-storage': '512Mi' ],
-      //   limits  : [ cpu: '1000m', memory: '4Gi', 'ephemeral-storage': '1Gi' ]
-      // ]
+    // resources      : [
+    //   requests: [ cpu: '500m', memory: '2Gi', 'ephemeral-storage': '512Mi' ],
+    //   limits  : [ cpu: '1000m', memory: '4Gi', 'ephemeral-storage': '1Gi' ]
+    // ]
     ])
     return this
   }
