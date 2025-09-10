@@ -58,22 +58,30 @@ class PodTemplate implements Serializable {
     }
   }
 
-  PodTemplate addMaven() {
+  PodTemplate addMaven(String javaVersion) {
+    javaVersion = javaVersion.tokenize('.').first() // eg. 21.2.0 -> 21
+    if (javaVersion != '8' || javaVersion != '11' || javaVersion != '17' || javaVersion != '21') {
+      return error "Unsupported Java version for Maven: ${javaVersion}. Supported: 8, 11, 17, 21."
+    }
     addContainerIfMissing([
       name           : 'maven',
-      image          : 'maven:3.9.8-eclipse-temurin-17',
+      image          : "maven:3.9.8-eclipse-temurin-${javaVersion}",
       imagePullPolicy: 'Always',
       command        : ['cat'],
       tty            : true,
-      resources      : [
-        requests: ['ephemeral-storage': '512Mi'],
-        limits  : ['ephemeral-storage': '1Gi']
-      ]
+    // resources      : [
+    //   requests: ['ephemeral-storage': '512Mi'],
+    //   limits  : ['ephemeral-storage': '1Gi']
+    // ]
     ])
     return this
   }
 
-  PodTemplate addNode() {
+  PodTemplate addNode(String nodeVersion) {
+    nodeVersion = nodeVersion.tokenize('.').first() 
+    if(nodeVersion != '24' || nodeVersion != '22' || nodeVersion != '20'){
+      return { error "Unsupported Node.js version: ${nodeVersion}. Supported: 24, 22, 20." }
+    }
     addContainerIfMissing([
       name           : 'nodejs',
       image          : 'node:20',
