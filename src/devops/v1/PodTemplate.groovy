@@ -82,9 +82,11 @@ class PodTemplate implements Serializable {
 
   PodTemplate addNode(String nodeVersion) {
     nodeVersion = nodeVersion.tokenize('.').first()
+
     if (!(nodeVersion in ['24', '22', '20'])) {
     // echo "Unsupported Node.js version: ${nodeVersion}. Supported: 24, 22, 20."
     }
+
     if (nodeVersion == '24') {
       nodeVersion = '24.7.0'
     }else if (nodeVersion == '22') {
@@ -131,9 +133,10 @@ class PodTemplate implements Serializable {
     if (javaVersion != '8' || javaVersion != '11' || javaVersion != '17' || javaVersion != '21') {
       return { error "Unsupported Java version for Gradle: ${javaVersion}. Supported: 8, 11, 17, 21." }
     }
+    String gradleImage = "gradle:jdk${javaVersion}"
     addContainerIfMissing([
       name           : 'gradle',
-      image          : "gradle:jdk${javaVersion}",
+      image          : gradleImage,
       imagePullPolicy: 'Always',
       command        : ['cat'],
       tty            : true,
