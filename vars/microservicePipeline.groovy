@@ -86,6 +86,7 @@ def call(args) {
         fullImageName = args.TARGET_ENV in ['prod', 'production'] ?
         "${config.registry.prod}/${args.MICROSERVICE_NAME}:${imageTag}" :
         "${config.registry.nonprod}/${args.MICROSERVICE_NAME}:${imageTag}"
+        prep.validateProperties(properties)
         prep.getConfigSummary(args, config, properties, fullImageName)
       }
     }
