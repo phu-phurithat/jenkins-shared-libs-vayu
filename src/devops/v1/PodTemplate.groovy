@@ -81,16 +81,17 @@ class PodTemplate implements Serializable {
   }
 
   PodTemplate addNode(String nodeVersion) {
-    nodeVersion = nodeVersion.tokenize('.').first() 
-    if(nodeVersion != '24' || nodeVersion != '22' || nodeVersion != '20'){
+    nodeVersion = nodeVersion.tokenize('.').first()
+    echo "nodeVersion = ${nodeVersion}"
+    if (nodeVersion != '24' || nodeVersion != '22' || nodeVersion != '20') {
       return { error "Unsupported Node.js version: ${nodeVersion}. Supported: 24, 22, 20." }
-    }else{
-      if(nodeVersion == '24'){
+    }else {
+      if (nodeVersion == '24') {
         nodeVersion = '24.7.0'
-      }else if(nodeVersion == '22'){
-        nodeVersion = '22.19.0' 
-    }else if(nodeVersion == '20'){
-        nodeVersion = '20.19.5'
+      }else if (nodeVersion == '22') {
+        nodeVersion = '22.19.0'
+      }else if (nodeVersion == '20') {
+          nodeVersion = '20.19.5'
       }
     }
     addContainerIfMissing([
