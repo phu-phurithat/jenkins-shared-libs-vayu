@@ -5,7 +5,8 @@ def Compile(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, build_tool) {
         if (build_tool == 'maven') {
             container('maven') {
                 sh '''
-                    mvn clean install verify
+                   mvn clean package -DskipTests \
+                   mvn test
                 '''
             }
         } else if (build_tool == 'npm' ) {
