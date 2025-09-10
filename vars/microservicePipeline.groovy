@@ -101,12 +101,9 @@ def call(args) {
           }
         }
       }
-      if (language != 'maven') {
-        stage('Sorce Code Scan') {
-          container('sonarscanner') {
-
-            scanner.SorceCodeScan(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY)
-          }
+      stage('Sorce Code Scan') {
+        container('sonarscanner') {
+          scanner.SorceCodeScan(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, language)
         }
       }
 
