@@ -21,7 +21,7 @@ def Compile(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, build_tool) {
                     pip install -r requirements.txt
                 '''
             }
-        }else i (build_tool == 'go' ) {
+        }else if (build_tool == 'go' ) {
             container('golang') {
                 sh '''
                     go mod tidy
