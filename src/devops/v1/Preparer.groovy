@@ -209,8 +209,17 @@ def validateProperties(properties) {
                                 }
                                 if (!properties.security.dast.paths) {
                                     errors << "Property 'security.dast.paths' is required when DAST is enabled."
-                                } else if (!(properties.security.dast.paths instanceof String)) {
-                                    errors << "Property 'security.dast.paths' must be a string."
+                                } else if (
+                                    !(properties.security.dast.paths instanceof String) &&
+                                    !(properties.security.dast.paths instanceof List)
+                                ) {
+                                    errors << "Property 'security.dast.paths' must be a string or a list of strings."
+                                } else if (properties.security.dast.paths instanceof List) {
+                                    if (properties.security.dast.paths.isEmpty()) {
+                                        errors << "Property 'security.dast.paths' list must not be empty."
+                                    } else if (!properties.security.dast.paths.every { it instanceof String }) {
+                                        errors << "All elements in 'security.dast.paths' list must be strings."
+                                    }
                                 }
                             }
                         }
