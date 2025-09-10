@@ -25,6 +25,7 @@ class PodTemplate implements Serializable {
     // Build tool container
     String tool = (config.build_tool ?: '').toString().toLowerCase()
     String languageVersion = (config.language_version ?: '').toString().toLowerCase()
+    echo "tool = ${tool}, languageVersion = ${languageVersion}"
     switch (tool) {
       case 'maven':  addMaven(languageVersion);  break
       case 'go':     addGo(languageVersion);     break
