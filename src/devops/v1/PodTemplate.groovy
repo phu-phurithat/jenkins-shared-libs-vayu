@@ -94,7 +94,7 @@ class PodTemplate implements Serializable {
     }else if (nodeVersion == '20') {
       nodeVersion = '20.19.5'
     }
-    String nodeImage = "node:${nodeVersion}"
+    String nodeImage = "node:${nodeVersion}-alpine"
 
     addContainerIfMissing([
       name           : 'nodejs',
@@ -108,9 +108,10 @@ class PodTemplate implements Serializable {
 
   PodTemplate addGo(String goVersion) {
     goVersion = goVersion.tokenize('.').first() // eg. 1.23
+   
     addContainerIfMissing([
       name           : 'golang',
-      image          : 'golang:1.23',
+      image          : "golang:${goVersion}-alpine",
       imagePullPolicy: 'Always',
       command        : ['cat'],
       tty            : true,
