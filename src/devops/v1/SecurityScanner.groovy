@@ -11,7 +11,7 @@ def SorceCodeScan(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, language) {
           """
 
           if (language == 'maven'){
-               param = param + " -Dsonar.java.binaries=target/"
+               param = param + " -Dsonar.java.binaries=target/classes"
           }
           sh """
                ${param}
