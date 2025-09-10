@@ -59,10 +59,14 @@ class PodTemplate implements Serializable {
     return this
   }
 
-  PodTemplate addMaven() {
+  PodTemplate addMaven(String javaVersion) {
+    javaVersion = javaVersion.tokenize('.').first() // eg. 21.2.0 -> 21
+    if (javaVersion != '8' || javaVersion != '11' || javaVersion != '17' || javaVersion != '21') {
+      return error "Unsupported Java version for Maven: ${javaVersion}. Supported: 8, 11, 17, 21."
+    }
     addContainerIfMissing([
       name           : 'maven',
-      image          : 'maven:3.9.8-eclipse-temurin-17',
+      image          : "maven:3.9.8-eclipse-temurin-${javaVersion}",
       imagePullPolicy: 'Always',
       command        : ['cat'],
       tty            : true,
