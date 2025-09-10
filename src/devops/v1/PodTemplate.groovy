@@ -24,7 +24,7 @@ class PodTemplate implements Serializable {
   PodTemplate injectConfig(config, args) {
     // Build tool container
     String tool = (config.build_tool ?: '').toString().toLowerCase()
-    Strinf languageVersion = (config.language_version ?: '').toString().toLowerCase()
+    String languageVersion = (config.language_version ?: '').toString().toLowerCase()
     switch (tool) {
       case 'maven':  addMaven(languageVersion);  break
       case 'go':     addGo(languageVersion);     break
@@ -103,7 +103,8 @@ class PodTemplate implements Serializable {
     return this
   }
 
-  PodTemplate addGo() {
+  PodTemplate addGo(String goVersion) {
+    goVersion = goVersion.tokenize('.').first() // eg. 1.23
     addContainerIfMissing([
       name           : 'golang',
       image          : 'golang:1.23',
