@@ -165,7 +165,7 @@ def validateProperties(properties) {
             dast: [
                 enable: [true, false, 'true', 'false', null],
                 port: Integer,
-                paths: List<String>,
+                paths: String,
             ],
         ],
     ]
