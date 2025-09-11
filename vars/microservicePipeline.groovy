@@ -136,23 +136,25 @@ def call(args) {
         defectdojo.ImportReport()
       }
 
-      dir('deployment') {
-        stage('Checkout Deployment Repository') {
-          // Re-clone to ensure clean state inside pod
-          git url: args.DEPLOYMENT_REPO, branch: args.BRANCH
-        }
+      if (args.AUTO_DEPLOY in [true, 'true']) {
+        dir('deployment') {
+          stage('Checkout Deployment Repository') {
+            // Re-clone to ensure clean state inside pod
+            git url: args.DEPLOYMENT_REPO, branch: args.BRANCH
+          }
 
-        String kubeconfigCred = config.environments[args.TARGET_ENV].cluster.toLowerCase()
-        String namespace    = config.environments[args.TARGET_ENV].namespace.toLowerCase()
-        String helmPath   = './helm-chart'   // path where your Helm chart lives
-        String helmRelease = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '').toLowerCase()
+          String kubeconfigCred = config.environments[args.TARGET_ENV].cluster.toLowerCase()
+          String namespace    = config.environments[args.TARGET_ENV].namespace.toLowerCase()
+          String helmPath   = './helm-chart'   // path where your Helm chart lives
+          String helmRelease = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '').toLowerCase()
 
-        dm.deployHelm(
+          dm.deployHelm(
           kubeconfigCred: kubeconfigCred,
           namespace: namespace,
           helmPath: helmPath,
           helmRelease: helmRelease
-        )
+          )
+        }
       }
     }
   }
