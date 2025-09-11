@@ -79,7 +79,7 @@ class PodTemplate implements Serializable {
 
   PodTemplate addNode(String nodeVersion) {
     nodeVersion = nodeVersion.tokenize('.').first()
-    String nodeImage = "node:${nodeVersion}-bullseye"
+    String nodeImage = "node:${nodeVersion}-bookworm"
     //String nodeImage = "node:${nodeVersion}-bullseye"
     addContainerIfMissing([
       name           : 'nodejs',
