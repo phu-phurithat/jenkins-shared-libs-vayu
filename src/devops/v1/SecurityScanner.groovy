@@ -5,7 +5,7 @@ def SorceCodeScan(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, language) {
           def sonar_param = [
                     maven:[src: 'src/main/java',
                          binaries: 'target/classes'],
-                    gradle:[src: 'src/main/java',
+                    gradle:[src: 'src',
                          binaries: 'build/classes/java/main'],
                          
                     other:[src: '.',
