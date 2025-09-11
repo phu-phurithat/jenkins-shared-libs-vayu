@@ -175,7 +175,9 @@ def validateProperties(properties) {
             errors << "Property '${key}' is required."
         } else if (key == 'language') {
             def lang = properties.language.toLowerCase()
-            if (!allowedValues.containsKey(lang)) {
+            if (lang == 'python') {
+                // some code
+            } else if (!allowedValues.containsKey(lang)) {
                 errors << "Unsupported language '${properties.language}'. Supported: ${allowedValues.keySet().join(', ')}"
             } else if (!allowedValues[lang].contains(properties.language_version?.toString())) {
                 errors << "Unsupported language_version '${properties.language_version}' for language '${lang}'. Supported: ${allowedValues[lang].join(', ')}"
