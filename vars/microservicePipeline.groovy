@@ -36,7 +36,6 @@ def call(args) {
   String fullImageName = ''
   String imageTag = 'latest'
 
-
   // ------------------- Prep on a controller/agent -------------------
   node('master') { // change label as needed
     // Basic input validation
@@ -59,7 +58,6 @@ def call(args) {
           error "Configuration file not found or empty at ${configPath}"
         }
         prep.validateConfig(config)
-        
       }
     }
 
@@ -108,12 +106,10 @@ def call(args) {
       String language = properties.language.toLowerCase()
       echo "build_tool = ${build_tool}"
 
-      stage('Build'){
-       builder.Compile(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, build_tool)
-          }
-        }
+      stage('Build') {
+        builder.Compile(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, build_tool)
       }
-      }
+
       stage('Sorce Code Scan') {
         container('sonarqube') {
           scanner.SorceCodeScan(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, language)
@@ -122,30 +118,25 @@ def call(args) {
 
       stage('Build Docker Image') {
         container('buildkit') {
-
-          builder.BuildImage(BUILDKIT_ADDR,fullImageName,DOCKER_CONFIG)
+          builder.BuildImage(BUILDKIT_ADDR, fullImageName, DOCKER_CONFIG)
         }
       }
       stage('Dependencies Scan') {
         container('trivy') {
-
           scanner.DependenciesScan()
         }
       }
       stage('Image Scan') {
         container('trivy') {
-
           scanner.ImageScan(fullImageName)
         }
       }
 
       stage('Import report') {
-
         defectdojo.ImportReport()
       }
 
       dir('deployment') {
-
         stage('Checkout Deployment Repository') {
           // Re-clone to ensure clean state inside pod
           git url: args.DEPLOYMENT_REPO, branch: args.BRANCH
@@ -163,4 +154,6 @@ def call(args) {
           helmRelease: helmRelease
         )
       }
-    
+    }
+  }
+}
