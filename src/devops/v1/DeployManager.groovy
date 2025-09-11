@@ -48,3 +48,20 @@ def deployHelm(args) {
   }
 }
 
+// TODO : In deployment repo will have $KIND/$ENV/$MS_VALUES.yaml
+// $KIND - deployment, statefulset, daemonset
+// $ENV - dev, sit, uat, prod
+// $MS_VALUES - microservice name
+
+// On helm repo will have 
+// app
+//  - chart.yaml
+//  - templates
+//    - deployment.yaml
+//    - service.yaml
+//    - _helpers.tpl
+//    - ingress.yaml
+//    - hpa.yaml
+//    - serviceaccount.yaml
+//  - values.yaml
+
