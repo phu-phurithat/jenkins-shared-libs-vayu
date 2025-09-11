@@ -2,41 +2,38 @@ package devops.v1
 
 def SorceCodeScan(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, language) {
      withCredentials([string(credentialsId: SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
-          if (language == 'maven') {
-               container('sonarscanner') {
-                    sh '''
-                    sonar-scanner \
-                             -Dsonar.projectKey=my-project \
-                             -Dsonar.sources=src \
-                             -Dsonar.host.url=http://sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
-                             -Dsonar.login=$SONAR_TOKEN
-                    '''
+          def sonar_param = [
+                    maven:[src: 'src/main/java',
+                         binaries: 'target/classes'],
+                         
+                    other:[src: 'src',
+                         binaries: '']
+                         
+               ]
+               if(language!='maven'){
+                    language = 'other'
                }
+               container('sonarscanner') {
+                    sh """
+                    sonar-scanner \
+                             -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                             -Dsonar.sources=${sonar_param[language].src} \
+                             -Dsonar.java.binaries=${sonar_param[language].binaries} \
+                             -Dsonar.host.url=${SONAR_HOST} \
+                             -Dsonar.login=${SONAR_TOKEN}
+                    """
+               }
+               
+               
+               
                sh """
                     curl -s -u "${SONAR_TOKEN}:" \
                                "${SONAR_HOST}/api/issues/search?projectKey=${SONAR_PROJECT_KEY}" \
                                -o sonarqube-report.json
                 """
                return
-          }
-          String param = """
-               sonar-scanner \
-                          -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                          -Dsonar.sources=. \
-                          -Dsonar.host.url=${SONAR_HOST} \
-                          -Dsonar.login=${SONAR_TOKEN} -Dsonar.java.binaries=target/
-          """
-
-          if (language == 'maven') {
-               param = param + ' -Dsonar.java.binaries=target/classes'
-          }
-          sh """
-               ${param}
-                 curl -s -u "${SONAR_TOKEN}:" \
-                            "${SONAR_HOST}/api/issues/search?projectKey=${SONAR_PROJECT_KEY}" \
-                            -o sonarqube-report.json
-             """
-     }
+     
+}
 }
 def DependenciesScan() {
      sh """
