@@ -11,8 +11,9 @@ def Compile(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, build_tool) {
         } else if (build_tool == 'npm' ) {
             container('nodejs') {
                     sh '''
-                        npm install
-                        npm run test
+                        npm install \
+                        run \
+                        test
                     '''
             }
         }else if (build_tool == 'pip') {
