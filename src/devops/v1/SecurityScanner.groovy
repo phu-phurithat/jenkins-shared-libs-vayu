@@ -13,7 +13,7 @@ def SorceCodeScan(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, language) {
                if(language!='maven'){
                     language = 'other'
                }
-               container('sonarscanner') {
+               container('sonarqube') {
                     sh """
                     sonar-scanner \
                              -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
