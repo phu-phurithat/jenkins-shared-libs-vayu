@@ -153,7 +153,7 @@ def validateProperties(properties) {
             java: ['8', '11', '17', '21'],
             node: ['14', '16', '18', '20', '22', '24'],
             go: ['1.18', '1.19', '1.20', '1.21', '1.22', '1.23', '1.24', '1.25'],
-            python: ['3.11.4', '3.12.0'],
+            python: ['3.9', '3.10', '3.11', '3.12', '3.13'],
         ],
         build_image: [true, false, 'true', 'false'],
         security: [
@@ -175,9 +175,7 @@ def validateProperties(properties) {
             errors << "Property '${key}' is required."
         } else if (key == 'language') {
             def lang = properties.language.toLowerCase()
-            if (lang == 'python') {
-                // some code
-            } else if (!allowedValues.containsKey(lang)) {
+             if (!allowedValues.containsKey(lang)) {
                 errors << "Unsupported language '${properties.language}'. Supported: ${allowedValues.keySet().join(', ')}"
             } else if (!allowedValues[lang].contains(properties.language_version?.toString())) {
                 errors << "Unsupported language_version '${properties.language_version}' for language '${lang}'. Supported: ${allowedValues[lang].join(', ')}"
