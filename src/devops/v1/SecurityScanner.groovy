@@ -5,12 +5,14 @@ def SorceCodeScan(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, language) {
           def sonar_param = [
                     maven:[src: 'src/main/java',
                          binaries: 'target/classes'],
+                    gradle:[src: 'src/main/java',
+                         binaries: 'build/classes/java/main'],
                          
                     other:[src: '.',
                          binaries: '']
                          
                ]
-               if(language!='maven'){
+               if(language!='maven' && language!='gradle'){
                     language = 'other'
                }
                container('sonarqube') {
