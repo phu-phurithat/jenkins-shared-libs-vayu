@@ -30,10 +30,11 @@ def Compile(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, build_tool) {
 
             '''
                 }
-        }else if (build_tool == 'gradle' ) {
+        }else if (build_tool == 'gradle' ) { // gradle build 
                 container('gradle') {
                     sh '''
-            gradle build
+            ./gradlew downloadRepos 
+            ./gradlew installDist    
             '''
                 }
         }
