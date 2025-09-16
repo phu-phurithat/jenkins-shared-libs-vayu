@@ -38,7 +38,7 @@ def Compile(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, build_tool) {
                 sh 'chmod +x gradlew' //give geadlew permission to execute
                 
                 sh '''
-           
+             ./gradlew googleJavaFormat
              ./gradlew build --scan downloadRepos installDist
 
             '''
