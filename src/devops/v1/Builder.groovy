@@ -39,7 +39,7 @@ def Compile(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, build_tool) {
                 
                 sh '''
            
-            ./gradlew clean classes downloadRepos installDist
+             ./gradlew build --scan downloadRepos installDist
 
             '''
                 }
