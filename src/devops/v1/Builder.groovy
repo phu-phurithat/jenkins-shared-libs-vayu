@@ -31,12 +31,16 @@ def Compile(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, build_tool) {
             '''
                 }
         }else if (build_tool == 'gradle' ) { // gradle build
+        //  ./gradlew clean classes
+        //     ./gradlew downloadRepos
+        //     ./gradlew installDist
                 container('gradle') {
                 sh 'chmod +x gradlew' //give geadlew permission to execute
+                
                 sh '''
-            ./gradlew classes
-            ./gradlew downloadRepos
-            ./gradlew installDist
+           
+            ./gradlew clean classes downloadRepos installDist
+
             '''
                 }
         }
