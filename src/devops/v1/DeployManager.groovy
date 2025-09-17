@@ -13,7 +13,7 @@ def deployHelm(args) {
   String HELM_RELEASE = args.helmRelease
 
   container('helm') {
-      stage('Helm Lint & Dry-Run') {
+      stage('Helm Dry-Run') {
         try {
           withCredentials([file(credentialsId: args.kubeconfigCred, variable: 'KUBECONFIG_FILE')]) {
             sh """
@@ -41,7 +41,7 @@ def deployHelm(args) {
           """
           }
         } catch (Exception e) {
-          echo "Deployment failed: ${e}"
+          error "Deployment failed: ${e}"
         }
       }
   }
