@@ -52,9 +52,8 @@ private rollbackHelm(helmRelease, namespace) {
   // @param helmRelease: String - Helm release name
   // @param namespace: String - Kubernetes namespace
 
-  container('helm') {
-    try {
-      withCredentials([file(credentialsId: 'kubeconfig-nonprod', variable: 'KUBECONFIG_FILE')]) {
+  try {
+    withCredentials([file(credentialsId: 'kubeconfig-nonprod', variable: 'KUBECONFIG_FILE')]) {
         int lastRevision = sh(
           script: "helm history ${helmRelease} -n ${namespace} --max 1 | awk 'NR==2 {print \$1}'",
           returnStdout: true
@@ -69,10 +68,9 @@ private rollbackHelm(helmRelease, namespace) {
         } else {
           echo "No previous Helm revision found for release ${helmRelease} in namespace ${namespace}"
         }
-      }
-    } catch (Exception e) {
-      error "Helm rollback failed: ${e}"
     }
+    } catch (Exception e) {
+    error "Helm rollback failed: ${e}"
   }
 }
 
@@ -94,4 +92,3 @@ def updateHelmValuesFile(helmValuesPath, imageFullName) {
   writeYaml file: helmValuesPath, data: helmValues
   echo "Updated Helm values file at ${helmValuesPath} with image ${imageFullName}"
 }
-
