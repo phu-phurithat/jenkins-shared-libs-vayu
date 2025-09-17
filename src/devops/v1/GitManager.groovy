@@ -1,3 +1,5 @@
+package devops.v1
+
 def pushChanges(String message, String repoUrl, String credentialsId) {
     withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
         sh """
