@@ -122,19 +122,17 @@ def call(args) {
             )
             isDeploySuccess = true
           } catch (Exception e) {
-            isDeploySuccess = false
+            echo "Deployment to ${args.TARGET_ENV} failed. Attempting rollback..."
+            dm.rollbackHelm(helmRelease, namespace, kubeconfigCred)
           }
 
           if (isDeploySuccess) {
             echo "Deployment to ${args.TARGET_ENV} successful."
             gitm.pushChanges(
-              "Update ${args.MICROSERVICE_NAME} manifest for ${args.TARGET_ENV}", 
-              args.DEPLOYMENT_REPO, 
+              "Update ${args.MICROSERVICE_NAME} manifest for ${args.TARGET_ENV}",
+              args.DEPLOYMENT_REPO,
               env.GITHUB_CRED
             )
-          } else {
-            echo "Deployment to ${args.TARGET_ENV} failed. Attempting rollback..."
-            dm.rollbackHelm(helmRelease, namespace, kubeconfigCred)
           }
         }
       } else {
@@ -142,5 +140,5 @@ def call(args) {
       }
     }
   }
-  // ------------------- End of podTemplate -------------------
+// ------------------- End of podTemplate -------------------
 }
