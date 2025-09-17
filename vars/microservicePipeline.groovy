@@ -73,6 +73,7 @@ def call(args) {
         fullPath = matcher.group(1)
         component = fullPath.tokenize('/')[-1].replace('.git', '')
         echo "fullPath: ${fullPath} and component: ${component}"
+        echo "${fullPath}+"-"+"${component} and ${component}+":"+"${imageTag}"
     } else {
         error("Could not parse repo URL: ${microserviceRepo}")
     }
