@@ -27,7 +27,7 @@ def call(args) {
   String appName = ''
   String microserviceRepo = ''
   String fullImageName = ''
-  String imageTag = ''
+  String imageTag = 'latest'
 
   // ------------------- Prep on a controller/agent -------------------
   node('master') { // change label as needed
