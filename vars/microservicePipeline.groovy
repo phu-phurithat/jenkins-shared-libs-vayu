@@ -27,7 +27,7 @@ def call(args) {
   String appName = ''
   String microserviceRepo = ''
   String fullImageName = ''
-  String imageTag = 'latest'
+  String imageTag = ''
 
   // ------------------- Prep on a controller/agent -------------------
   node('master') { // change label as needed
@@ -76,7 +76,8 @@ def call(args) {
           error "Properties file not found at ${propertiesPath}"
         }
 
-        imageTag = args.IMAGE_TAG ?: sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+        // imageTag = args.IMAGE_TAG ?: sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+        imageTag = 'latest'
         fullImageName = args.TARGET_ENV in ['prod', 'production'] ?
         "${config.registry.prod}/${args.MICROSERVICE_NAME}:${imageTag}" :
         "${config.registry.nonprod}/${args.MICROSERVICE_NAME}:${imageTag}"
