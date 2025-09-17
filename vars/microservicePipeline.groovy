@@ -67,8 +67,17 @@ def call(args) {
     dir('src') {
       stage('Checkout Microservice Code for Preparation') {
         microserviceRepo = config.kinds.deployments[args.MICROSERVICE_NAME]
-         fullPath = (microserviceRepo =~ /github\.com\/(.*)/).group(1)
-         component = fullPath.tokenize('/')[-1].replace('.git', '')
+         if (microserviceRepo) {
+        def matcher = (microserviceRepo =~ /github\.com\/(.*)/)
+        if (matcher.find()) {
+        fullPath = matcher.group(1)
+        component = fullPath.tokenize('/')[-1].replace('.git', '')
+    } else {
+        error("Could not parse repo URL: ${microserviceRepo}")
+    }
+} else {
+    error("Microservice '${args.MICROSERVICE_NAME}' not found in configuration.")
+}
         if (!microserviceRepo) {
           error "Microservice '${args.MICROSERVICE_NAME}' not found in configuration."
         }
