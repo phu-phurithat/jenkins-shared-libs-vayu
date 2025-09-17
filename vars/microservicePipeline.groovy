@@ -127,6 +127,11 @@ def call(args) {
 
           if (isDeploySuccess) {
             echo "Deployment to ${args.TARGET_ENV} successful."
+            gitm.pushChanges(
+              "Update ${args.MICROSERVICE_NAME} manifest for ${args.TARGET_ENV}", 
+              args.DEPLOYMENT_REPO, 
+              env.GITHUB_CRED
+            )
           } else {
             echo "Deployment to ${args.TARGET_ENV} failed. Attempting rollback..."
             dm.rollbackHelm(helmRelease, namespace, kubeconfigCred)

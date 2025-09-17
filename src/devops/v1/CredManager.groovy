@@ -16,5 +16,6 @@ package devops.v1
     env.OCP_NONPROD_AGENT = "ocp-nonprod-agent"
     env.OCP_PROD_AGENT = "ocp-prod-agent"
     env.SONAR_TOKEN =  'sonar_token'
+    env.GITHUB_CRED = 'github-cred'
     
   }
