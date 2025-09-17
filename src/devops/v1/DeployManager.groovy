@@ -93,6 +93,6 @@ def updateHelmValuesFile(valuePath, imageFullName) {
   helmValues.image.repository = imageFullName.tokenize(':')[0]
   helmValues.image.tag = imageFullName.tokenize(':')[1]
 
-  writeYaml file: valuePath, data: helmValues
+  writeYaml file: valuePath, data: helmValues , overwrite: true
   echo "Updated Helm values file at ${valuePath} with image ${imageFullName}"
 }
