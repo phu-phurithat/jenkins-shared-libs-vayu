@@ -2,16 +2,16 @@ package devops.v1
 
 def pushChanges(String message, String repoUrl, String credentialsId) {
     withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-      String sshUrl = repoUrl.replace("https://", "git@").replaceFirst("/", ":")
-      sh """
-        git config --global user.email "auto@pipeline.jenkins.io"
-        git config --global user.name "Jenkins CI"
-        git remote set-url origin ${GIT_USERNAME}:${GIT_PASSWORD}@${sshUrl}
-        git add .
-        git commit -m "${message}" || echo "No changes to commit"
-        git push origin main
-        """
-    }
+  sh """
+    git config --global user.email "auto@pipeline.jenkins.io"
+    git config --global user.name "Jenkins CI"
+    git remote set-url origin https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/phu-phurithat/microservices-demo.git
+    git add .
+    git commit -m "${message}" || echo "No changes to commit"
+    git push origin main
+  """
+}
+
 }
 
 def setupHelm() {
