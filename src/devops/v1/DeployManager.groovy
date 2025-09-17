@@ -9,7 +9,7 @@ def deployHelm(args) {
 
   String kubeconfigCred = args.kubeconfigCred
   String NAMESPACE    = args.namespace
-  String HELM_PATH   = args.helmPath
+  String VALUE_PATH   = args.valuePath
   String HELM_RELEASE = args.helmRelease
 
   container('helm') {
@@ -19,7 +19,7 @@ def deployHelm(args) {
             sh """
             export KUBECONFIG=${KUBECONFIG_FILE}
             helm upgrade --install ${HELM_RELEASE} stable/app \
-              -f ${HELM_PATH} \
+              -f ${VALUE_PATH} \
               --namespace ${NAMESPACE} \
               --create-namespace \
               --dry-run=client
@@ -36,26 +36,27 @@ def deployHelm(args) {
             sh """
           export KUBECONFIG=${KUBECONFIG_FILE}
           helm upgrade --install ${HELM_RELEASE} stable/app \
-            -f ${HELM_PATH} \
+            -f ${VALUE_PATH} \
             --namespace ${NAMESPACE} \
             --create-namespace \
             --wait --timeout 5m
           """
           }
         } catch (Exception e) {
-          rollbackHelm(HELM_RELEASE, NAMESPACE)
-          error "Helm deploy failed: ${e} - Rolled back to previous release"
+          echo "Deployment failed: ${e}"
         }
       }
   }
 }
 
-private rollbackHelm(helmRelease, namespace) {
+def rollbackHelm(helmRelease, namespace, kubeconfigCred) {
   // @param helmRelease: String - Helm release name
   // @param namespace: String - Kubernetes namespace
+  // @param kubeconfigCred: String - Jenkins credential ID for kubeconfig file
 
-  try {
-    withCredentials([file(credentialsId: 'kubeconfig-nonprod', variable: 'KUBECONFIG_FILE')]) {
+  container('helm') {
+    try {
+      withCredentials([file(credentialsId: kubeconfigCred, variable: 'KUBECONFIG_FILE')]) {
         int lastRevision = sh(
           script: "helm history ${helmRelease} -n ${namespace} --max 1 | awk 'NR==2 {print \$1}'",
           returnStdout: true
@@ -70,27 +71,28 @@ private rollbackHelm(helmRelease, namespace) {
         } else {
           echo "No previous Helm revision found for release ${helmRelease} in namespace ${namespace}"
         }
-    }
+      }
     } catch (Exception e) {
-    error "Helm rollback failed: ${e}"
+      error "Helm rollback failed: ${e}"
+    }
   }
 }
 
-def updateHelmValuesFile(helmValuesPath, imageFullName) {
-  // @param helmValuesPath: String - Path to Helm values.yaml file
+def updateHelmValuesFile(valuePath, imageFullName) {
+  // @param valuePath: String - Path to Helm values.yaml file
   // @param imageFullName: String - Full image name with tag to set in values.yaml
 
-  if (!fileExists(helmValuesPath)) {
-    error "Helm values file not found at ${helmValuesPath}"
+  if (!fileExists(valuePath)) {
+    error "Helm values file not found at ${valuePath}"
   }
 
-  def helmValues = readYaml file: helmValuesPath
+  def helmValues = readYaml file: valuePath
   if (!helmValues.image) {
     helmValues.image = [:]
   }
   helmValues.image.repository = imageFullName.tokenize(':')[0]
   helmValues.image.tag = imageFullName.tokenize(':')[1]
 
-  writeYaml file: helmValuesPath, data: helmValues
-  echo "Updated Helm values file at ${helmValuesPath} with image ${imageFullName}"
+  writeYaml file: valuePath, data: helmValues
+  echo "Updated Helm values file at ${valuePath} with image ${imageFullName}"
 }

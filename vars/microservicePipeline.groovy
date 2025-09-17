@@ -1,7 +1,7 @@
 import devops.v1.*
 
 def call(args) {
-  // args only contain 
+  // args only contain
   // DEPLOYMENT_REPO, TRIGGER_TOKEN, MICROSERVICE_NAME, BRANCH (optional), AUTO_DEPLOY, TARGET_ENV
   // IMAGE_TAG (optional)
 
@@ -20,18 +20,22 @@ def call(args) {
   def prep = new Preparer()
   def dm = new DeployManager()
   def gitm = new GitManager()
+
+  // Variables
   def config = [:]
   def properties = [:]
+  String appName = ''
   String microserviceRepo = ''
   String fullImageName = ''
   String imageTag = ''
-
 
   // ------------------- Prep on a controller/agent -------------------
   node('master') { // change label as needed
     // Basic input validation
     prep.validateArguments(args)
     credManager.globalENV()
+
+    appName = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '').toLowerCase()
 
     dir('deployment') {
       stage('Checkout Deployment Repository') {
@@ -49,7 +53,6 @@ def call(args) {
           error "Configuration file not found or empty at ${configPath}"
         }
         prep.validateConfig(config)
-        
       }
     }
 
@@ -77,46 +80,62 @@ def call(args) {
         fullImageName = args.TARGET_ENV in ['prod', 'production'] ?
         "${config.registry.prod}/${args.MICROSERVICE_NAME}:${imageTag}" :
         "${config.registry.nonprod}/${args.MICROSERVICE_NAME}:${imageTag}"
-        
+
         prep.getConfigSummary(args, config, properties, fullImageName)
       }
     }
 
-      stage('Prepare Agent') {
-        pt.injectConfig(properties, args)
-      }
+    stage('Prepare Agent') {
+      pt.injectConfig(properties, args)
+    }
   }
 
   // ------------------- Run inside Kubernetes podTemplate -------------------
   podTemplate(yaml: pt.toString()) {
     node(POD_LABEL) {
+      if (args.AUTO_DEPLOY in [true, 'true'] ) {
+        dir('deployment') {
+          stage('Checkout Deployment Repository') {
+            // Re-clone to ensure clean state inside pod
+            git url: args.DEPLOYMENT_REPO, branch: args.BRANCH
+          }
 
-      dir('deployment') {
+          String kubeconfigCred = config.environments[args.TARGET_ENV].cluster.toLowerCase()
+          String namespace    = config.environments[args.TARGET_ENV].namespace.toLowerCase()
+          String valuePath   = "./deployments/${args.TARGET_ENV}/${args.MICROSERVICE_NAME}.yaml"   // path where your Helm chart lives
+          String helmRelease = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '').toLowerCase()
 
-        stage('Checkout Deployment Repository') {
-          // Re-clone to ensure clean state inside pod
-          git url: args.DEPLOYMENT_REPO, branch: args.BRANCH
+          // Update Helm values with the new image
+          dm.updateHelmValuesFile(valuePath, fullImageName)
+
+          // Setup Helm (remove default stable repo and add ours)
+          gitm.setupHelm()
+
+          // Deploy via Helm if auto-deploy is enabled
+          boolean isDeploySuccess = false
+          try {
+            dm.deployHelm(
+              kubeconfigCred: kubeconfigCred,
+              namespace: namespace,
+              valuePath: valuePath,
+              helmRelease: helmRelease
+            )
+            isDeploySuccess = true
+          } catch (Exception e) {
+            isDeploySuccess = false
+          }
+
+          if (isDeploySuccess) {
+            echo "Deployment to ${args.TARGET_ENV} successful."
+          } else {
+            echo "Deployment to ${args.TARGET_ENV} failed. Attempting rollback..."
+            dm.rollbackHelm(helmRelease, namespace, kubeconfigCred)
+          }
         }
-
-        String kubeconfigCred = config.environments[args.TARGET_ENV].cluster.toLowerCase()
-        String namespace    = config.environments[args.TARGET_ENV].namespace.toLowerCase()
-        String helmPath   = "./deployments/${args.TARGET_ENV}/${args.MICROSERVICE_NAME}.yaml"   // path where your Helm chart lives
-        String helmRelease = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '').toLowerCase()
-
-
-        // Setup Helm (remove default stable repo and add ours)
-        gitm.setupHelm()
-
-        // Deploy via Helm if auto-deploy is enabled
-        dm.deployHelm(
-          kubeconfigCred: kubeconfigCred,
-          namespace: namespace,
-          helmPath: helmPath,
-          helmRelease: helmRelease
-        )
-
+      } else {
+        echo 'Auto-deploy is disabled. Skipping deployment step.'
       }
     }
   }
+  // ------------------- End of podTemplate -------------------
 }
-
