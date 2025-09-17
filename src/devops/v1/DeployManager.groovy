@@ -55,10 +55,16 @@ def rollbackHelm(helmRelease, namespace, kubeconfigCred) {
   container('helm') {
     try {
       withCredentials([file(credentialsId: kubeconfigCred, variable: 'KUBECONFIG_FILE')]) {
-        String lastRevision = sh(
-          script: "helm history ${helmRelease} -n ${namespace} --max 1 | awk 'NR==2 {print \$1}'",
-          returnStdout: true
+        String currentRevision = sh(
+            script: '''
+                export KUBECONFIG="$KUBECONFIG_FILE"
+                helm list -n ${namespace} -o json | jq -r '.[] | select(.name=="${helmRelease}") | .revision' 2>/dev/null || echo 'unknown'
+            ''',
+            returnStdout: true
         ).trim()
+        String lastRevision = (currentRevision.isInteger() && currentRevision.toInteger() > 1) ? 
+          (currentRevision.toInteger() - 1).toString() : null
+
 
         if (lastRevision) {
           sh """
