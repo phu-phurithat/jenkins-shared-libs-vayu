@@ -21,7 +21,6 @@ def deployHelm(args) {
             helm upgrade --install ${HELM_RELEASE} stable/app \
               -f ${VALUE_PATH} \
               --namespace ${NAMESPACE} \
-              --create-namespace \
               --dry-run=client
           """
           }
@@ -38,7 +37,6 @@ def deployHelm(args) {
           helm upgrade --install ${HELM_RELEASE} stable/app \
             -f ${VALUE_PATH} \
             --namespace ${NAMESPACE} \
-            --create-namespace \
             --wait --timeout 5m
           """
           }
