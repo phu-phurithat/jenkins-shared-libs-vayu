@@ -67,8 +67,9 @@ def call(args) {
     dir('src') {
       stage('Checkout Microservice Code for Preparation') {
         microserviceRepo = config.kinds.deployments[args.MICROSERVICE_NAME]
-        fullPath = (microserviceRepo =~ /github\.com\/(.*)/).group(1)
-        component = fullPath.tokenize('/')[-1].replace('.git', '')
+        echo "TEST microserviceRepo = ${microserviceRepo}"
+        // fullPath = (microserviceRepo =~ /github\.com\/(.*)/).group(1)
+        // component = fullPath.tokenize('/')[-1].replace('.git', '')
         if (!microserviceRepo) {
           error "Microservice '${args.MICROSERVICE_NAME}' not found in configuration."
         }
