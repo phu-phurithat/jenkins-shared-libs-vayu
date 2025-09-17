@@ -122,6 +122,7 @@ def call(args) {
             )
             isDeploySuccess = true
           } catch (Exception e) {
+            isDeploySuccess = false
             echo "Deployment to ${args.TARGET_ENV} failed. Attempting rollback..."
             dm.rollbackHelm(helmRelease, namespace, kubeconfigCred)
           }
