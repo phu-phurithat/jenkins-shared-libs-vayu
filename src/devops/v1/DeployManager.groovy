@@ -15,11 +15,10 @@ def deployHelm(args) {
   container('helm') {
       stage('Helm Lint & Dry-Run') {
         try {
-          sh "helm lint ${args.helmPath}"
           withCredentials([file(credentialsId: args.kubeconfigCred, variable: 'KUBECONFIG_FILE')]) {
             sh """
             export KUBECONFIG=${KUBECONFIG_FILE}
-            helm upgrade --install ${HELM_RELEASE} ${HELM_PATH} \
+            helm upgrade --install ${HELM_RELEASE} stable/app \
               --namespace ${NAMESPACE} \
               --create-namespace \
               --dry-run=client
@@ -35,16 +34,64 @@ def deployHelm(args) {
           withCredentials([file(credentialsId: kubeconfigCred, variable: 'KUBECONFIG_FILE')]) {
             sh """
           export KUBECONFIG=${KUBECONFIG_FILE}
-          helm upgrade --install ${HELM_RELEASE} ${HELM_PATH} \
+          helm upgrade --install ${HELM_RELEASE} stable/app \
             --namespace ${NAMESPACE} \
             --create-namespace \
             --wait --timeout 5m
           """
           }
         } catch (Exception e) {
-          error "Helm deploy failed: ${e}"
+          rollbackHelm(HELM_RELEASE, NAMESPACE)
+          error "Helm deploy failed: ${e} - Rolled back to previous release"
         }
       }
   }
+}
+
+private rollbackHelm(helmRelease, namespace) {
+  // @param helmRelease: String - Helm release name
+  // @param namespace: String - Kubernetes namespace
+
+  container('helm') {
+    try {
+      withCredentials([file(credentialsId: 'kubeconfig-nonprod', variable: 'KUBECONFIG_FILE')]) {
+        int lastRevision = sh(
+          script: "helm history ${helmRelease} -n ${namespace} --max 1 | awk 'NR==2 {print \$1}'",
+          returnStdout: true
+        ).trim()
+
+        if (lastRevision) {
+          sh """
+            export KUBECONFIG=${KUBECONFIG_FILE}
+            helm rollback ${helmRelease} ${lastRevision} -n ${namespace}
+          """
+          echo "Rolled back Helm release ${helmRelease} to revision ${lastRevision} in namespace ${namespace}"
+        } else {
+          echo "No previous Helm revision found for release ${helmRelease} in namespace ${namespace}"
+        }
+      }
+    } catch (Exception e) {
+      error "Helm rollback failed: ${e}"
+    }
+  }
+}
+
+def updateHelmValuesFile(helmValuesPath, imageFullName) {
+  // @param helmValuesPath: String - Path to Helm values.yaml file
+  // @param imageFullName: String - Full image name with tag to set in values.yaml
+
+  if (!fileExists(helmValuesPath)) {
+    error "Helm values file not found at ${helmValuesPath}"
+  }
+
+  def helmValues = readYaml file: helmValuesPath
+  if (!helmValues.image) {
+    helmValues.image = [:]
+  }
+  helmValues.image.repository = imageFullName.tokenize(':')[0]
+  helmValues.image.tag = imageFullName.tokenize(':')[1]
+
+  writeYaml file: helmValuesPath, data: helmValues
+  echo "Updated Helm values file at ${helmValuesPath} with image ${imageFullName}"
 }
 

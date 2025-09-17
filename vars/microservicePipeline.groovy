@@ -19,6 +19,7 @@ def call(args) {
   def defectdojo = new DefectDojoManager()
   def prep = new Preparer()
   def dm = new DeployManager()
+  def gitm = new GitManager()
   def config = [:]
   def properties = [:]
   String microserviceRepo = ''
@@ -90,25 +91,31 @@ def call(args) {
   podTemplate(yaml: pt.toString()) {
     node(POD_LABEL) {
 
-      // dir('deployment') {
+      dir('deployment') {
 
-      //   stage('Checkout Deployment Repository') {
-      //     // Re-clone to ensure clean state inside pod
-      //     git url: args.DEPLOYMENT_REPO, branch: args.BRANCH
-      //   }
+        stage('Checkout Deployment Repository') {
+          // Re-clone to ensure clean state inside pod
+          git url: args.DEPLOYMENT_REPO, branch: args.BRANCH
+        }
 
-      //   String kubeconfigCred = config.environments[args.TARGET_ENV].cluster.toLowerCase()
-      //   String namespace    = config.environments[args.TARGET_ENV].namespace.toLowerCase()
-      //   String helmPath   = './helm-chart'   // path where your Helm chart lives
-      //   String helmRelease = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '').toLowerCase()
+        String kubeconfigCred = config.environments[args.TARGET_ENV].cluster.toLowerCase()
+        String namespace    = config.environments[args.TARGET_ENV].namespace.toLowerCase()
+        String helmPath   = "./deployments/${args.TARGET_ENV}/${args.MICROSERVICE_NAME}.yaml"   // path where your Helm chart lives
+        String helmRelease = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '').toLowerCase()
 
-      //   dm.deployHelm(
-      //     kubeconfigCred: kubeconfigCred,
-      //     namespace: namespace,
-      //     helmPath: helmPath,
-      //     helmRelease: helmRelease
-      //   )
-      // }
+
+        // Setup Helm (remove default stable repo and add ours)
+        gitm.setupHelm()
+
+        // Deploy via Helm if auto-deploy is enabled
+        dm.deployHelm(
+          kubeconfigCred: kubeconfigCred,
+          namespace: namespace,
+          helmPath: helmPath,
+          helmRelease: helmRelease
+        )
+
+      }
     }
   }
 }
