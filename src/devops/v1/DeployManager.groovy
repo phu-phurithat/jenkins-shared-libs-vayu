@@ -19,6 +19,7 @@ def deployHelm(args) {
             sh """
             export KUBECONFIG=${KUBECONFIG_FILE}
             helm upgrade --install ${HELM_RELEASE} stable/app \
+              -f ${HELM_PATH} \
               --namespace ${NAMESPACE} \
               --create-namespace \
               --dry-run=client
@@ -35,6 +36,7 @@ def deployHelm(args) {
             sh """
           export KUBECONFIG=${KUBECONFIG_FILE}
           helm upgrade --install ${HELM_RELEASE} stable/app \
+            -f ${HELM_PATH} \
             --namespace ${NAMESPACE} \
             --create-namespace \
             --wait --timeout 5m
