@@ -6,7 +6,7 @@ def pushChanges(String message, String repoUrl, String credentialsId) {
       sh """
         git config --global user.email "auto@pipeline.jenkins.io"
         git config --global user.name "Jenkins CI"
-        git remote set-url origin ${sshUrl}
+        git remote set-url origin ${GIT_USERNAME}:${GIT_PASSWORD}@${sshUrl}
         git add .
         git commit -m "${message}" || echo "No changes to commit"
         git push origin main
