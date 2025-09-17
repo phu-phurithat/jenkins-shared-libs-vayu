@@ -1,5 +1,5 @@
 package devops.v1
-def ImportReport(fullImageName,imageTag) {
+def ImportReport(fullPath, imageTag,component) {
       withCredentials([string(credentialsId: DOJO_KEY, variable: 'DOJO_KEY')]) {
           //SonarQube Scan Source Code
           sh """
@@ -11,8 +11,8 @@ def ImportReport(fullImageName,imageTag) {
             -F active="true" \
             -F verified="true" \
             -F file=@sonarqube-report.json \
-            -F product_name='${fullImageName}' \
-            -F engagement_name='${imageTag}' \
+            -F product_name="${fullImageName}+"-"+"${component}" \
+            -F engagement_name="${component}+":"+"${imageTag}" \
             -F deduplication_on_engagement=true \
             -F close_old_findings=true \
             -F auto_create_context=true

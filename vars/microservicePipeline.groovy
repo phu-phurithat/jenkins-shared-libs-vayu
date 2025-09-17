@@ -36,7 +36,8 @@ def call(args) {
   String microserviceRepo = ''
   String fullImageName = ''
   String imageTag = 'latest'
-  String fullPath = ''
+  String fullPath = (microserviceRepo =~ /github\.com\/(.*)/).group(1)
+  String component = fullPath.tokenize('/')[-1].replace('.git', '')
 
   // ------------------- Prep on a controller/agent -------------------
   node('master') { // change label as needed
@@ -135,7 +136,7 @@ def call(args) {
       }
 
       stage('Import report') {
-        defectdojo.ImportReport(fullImageName,imageTag)
+        defectdojo.ImportReport(fullPath, imageTag,component)
       }
 
       if (args.AUTO_DEPLOY in [true, 'true']) {
