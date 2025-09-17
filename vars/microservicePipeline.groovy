@@ -8,6 +8,7 @@ def call(args) {
   final String SONAR_PROJECT_KEY = 'java'
   final String BUILDKIT_ADDR     = 'tcp://buildkit-buildkit-service.buildkit.svc.cluster.local:1234'
   final String DOCKER_CONFIG     = '/root/.docker/config.json'
+  
 
   // ENV
   // env.TRIVY_BASE_URL = 'http://trivy.trivy.svc.cluster.local:4954'
@@ -35,6 +36,7 @@ def call(args) {
   String microserviceRepo = ''
   String fullImageName = ''
   String imageTag = 'latest'
+  String fullPath = ''
 
   // ------------------- Prep on a controller/agent -------------------
   node('master') { // change label as needed
@@ -133,7 +135,7 @@ def call(args) {
       }
 
       stage('Import report') {
-        defectdojo.ImportReport()
+        defectdojo.ImportReport(fullImageName,imageTag)
       }
 
       if (args.AUTO_DEPLOY in [true, 'true']) {
