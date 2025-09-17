@@ -37,7 +37,7 @@ def deployHelm(args) {
           helm upgrade --install ${HELM_RELEASE} stable/app \
             -f ${VALUE_PATH} \
             --namespace ${NAMESPACE} \
-            --wait --timeout 5m
+            --wait --timeout 30s
           """
           }
         } catch (Exception e) {
