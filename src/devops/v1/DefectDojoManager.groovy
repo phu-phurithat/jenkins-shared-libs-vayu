@@ -11,7 +11,7 @@ def ImportReport(fullPath, imageTag,component) {
             -F active="true" \
             -F verified="true" \
             -F file=@sonarqube-report.json \
-            -F product_name="${fullImageName}+"-"+"${component}" \
+            -F product_name="${fullPath}+"-"+"${component}" \
             -F engagement_name="${component}+":"+"${imageTag}" \
             -F deduplication_on_engagement=true \
             -F close_old_findings=true \
@@ -26,8 +26,8 @@ def ImportReport(fullPath, imageTag,component) {
             -F active="true" \
             -F verified="true" \
             -F file=@trivy_deps.json \
-            -F product_name='sample' \
-            -F engagement_name='ci-security-scan' \
+            -F product_name="${fullPath}+"-"+"${component}" \
+            -F engagement_name="${component}+":"+"${imageTag}" \
             -F deduplication_on_engagement=true \
             -F close_old_findings=true \
             -F auto_create_context=true
@@ -42,8 +42,8 @@ def ImportReport(fullPath, imageTag,component) {
             -F active="true" \
             -F verified="true" \
             -F file=@trivy_image.json \
-            -F product_name='sample' \
-            -F engagement_name='ci-security-scan' \
+            -F product_name="${fullPath}+"-"+"${component}" \
+            -F engagement_name="${component}+":"+"${imageTag}" \
             -F deduplication_on_engagement=true \
             -F close_old_findings=true \
             -F auto_create_context=true
