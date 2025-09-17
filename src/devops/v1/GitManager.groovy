@@ -2,13 +2,15 @@ package devops.v1
 
 def pushChanges(String message, String repoUrl, String credentialsId) {
     withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-        sh """
-            git config user.name "jenkins"
-            git config user.email "auto@pipeline.jenkins"
-            git add .
-            git commit -m "${message}"
-        git push origin HEAD:main
-    """
+      String sshUrl = repoUrl.replace("https://", "git@").replace("/", ":", 1)
+      sh """
+        git config --global user.email "auto@pipeline.jenkins.io"
+        git config --global user.name "Jenkins CI"
+        git remote set-url origin ${sshUrl}
+        git add .
+        git commit -m "${message}" || echo "No changes to commit"
+        git push origin main
+        """
     }
 }
 
