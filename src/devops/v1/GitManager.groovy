@@ -2,7 +2,7 @@ package devops.v1
 
 def pushChanges(String message, String repoUrl, String credentialsId) {
     withCredentials([usernamePassword(credentialsId: credentialsId, passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-      String sshUrl = repoUrl.replace("https://", "git@").replace("/", ":", 1)
+      String sshUrl = repoUrl.replace("https://", "git@").replaceFirst("/", ":")
       sh """
         git config --global user.email "auto@pipeline.jenkins.io"
         git config --global user.name "Jenkins CI"
