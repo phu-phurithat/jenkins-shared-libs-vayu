@@ -7,7 +7,7 @@ def ImportReport(fullPath, imageTag, component) {
   def productId = sh(
                         script: """
                             curl -s -k -H "Authorization: Token ${DOJO_KEY}" \
-                                 "${DEFECTDOJO_BASE_URL}/api/v2/products/?name=${productName}" \
+                                 "${DEFECTDOJO_BASE_URL}/api/v2/products?name=${productName}" \
 
                         """,
                         returnStdout: true
@@ -38,7 +38,7 @@ def ImportReport(fullPath, imageTag, component) {
   def engagementId = sh(
                         script: """
                             curl -s -k -H "Authorization: Token ${DOJO_KEY}" \
-                                 "${DEFECTDOJO_BASE_URL}/api/v2/engagements/?name=${engagementName}&product=${productId}"
+                                 "${DEFECTDOJO_BASE_URL}/api/v2/engagements?name=${engagementName}&product=${productId}"
                         """,
                         returnStdout: true
                        )
