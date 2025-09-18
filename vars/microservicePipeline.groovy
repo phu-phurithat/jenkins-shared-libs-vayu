@@ -68,7 +68,7 @@ def call(args) {
       stage('Checkout Microservice Code for Preparation') {
         microserviceRepo = config.kinds.deployments[args.MICROSERVICE_NAME]
          if (microserviceRepo) {
-        def matcher = (microserviceRepo =~ /github\.com\/(.*)/)
+        def matcher = (microserviceRepo =~ /github\.com\/(.*)\.git/)
         if (matcher.find()) {
         fullPath = matcher.group(1)
         component = fullPath.tokenize('/')[-1].replace('.git', '')
