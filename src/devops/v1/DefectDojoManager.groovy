@@ -1,6 +1,6 @@
 package devops.v1
-def productName=''
-def engagementName=''
+def productName
+def engagementName
 def ImportReport(fullPath, imageTag,component) {
   productName= fullPath+'-'+component
   engagementName= component':'+imageTag
