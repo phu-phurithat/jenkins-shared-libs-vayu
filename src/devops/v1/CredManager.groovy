@@ -5,7 +5,7 @@ package devops.v1
   def globalENV(){
     
     env.TRIVY_BASE_URL = "http://trivy.trivy.svc.cluster.local:4954"
-    env.DEFECTDOJO_BASE_URL = "http://defectdojo-django.defectdojo.svc.cluster.local:8200"
+    env.DEFECTDOJO_BASE_URL = "https://defectdojo.phurithat.site"
     env.DOJO_KEY = "defectdojo_api_key"
     env.HARBOR_CRED = "harbor-cred"
     env.JENKINS_CRED = "jenkins-cred"
