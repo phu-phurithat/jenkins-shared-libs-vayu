@@ -7,7 +7,6 @@ def ImportReport(fullPath, imageTag, component) {
   def productId = sh(
                         script: """
                             curl -s -k -H "Authorization: Token ${DOJO_KEY}" \
-                            -H "Content-Type: application/json" \
                             "${DEFECTDOJO_BASE_URL}/api/v2/products/?name=${productName}" 
                         """,
                         returnStdout: true
@@ -28,9 +27,7 @@ def ImportReport(fullPath, imageTag, component) {
                             script: """
                                 curl -s -k -X POST "${DEFECTDOJO_BASE_URL}/api/v2/products/" \
                                     -H "Authorization: Token ${DOJO_KEY}" \
-                                    -H "Content-Type: application/json" \
-                                    -d '{"name": "${productName}", "description": "Auto-created from Jenkins","prod_type": 1}' \
-                                    | jq '.id'
+                                    -d '{"name": "${productName}", "description": "Auto-created from Jenkins","prod_type": 1}' 
                             """,
                             returnStdout: true
                         )
