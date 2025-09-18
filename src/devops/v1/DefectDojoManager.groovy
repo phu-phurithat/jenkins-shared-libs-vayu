@@ -59,10 +59,10 @@ def ImportReport(fullPath, imageTag, component) {
                                         "product": ${productId},
                                         "status": "In Progress",
                                         "engagement_type": "CI/CD"
-                                    }' | jq '.id'
+                                    }'
                             """,
                             returnStdout: true
-                        ).trim()
+                        )
   }
   withCredentials([string(credentialsId: DOJO_KEY, variable: 'DOJO_KEY')]) {
     //SonarQube Scan Source Code
