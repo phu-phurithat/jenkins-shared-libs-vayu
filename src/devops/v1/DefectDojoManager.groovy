@@ -1,9 +1,9 @@
 package devops.v1
-def productName
-def engagementName
+String productName
+String engagementName
 def ImportReport(fullPath, imageTag,component) {
-  productName= fullPath+'-'+component
-  engagementName= component':'+imageTag
+  productName= "${fullPath}-${component}"
+  engagementName= "${component}:${imageTag}"
   
   def productId = sh(
                         script: """
