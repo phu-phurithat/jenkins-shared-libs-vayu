@@ -1,7 +1,7 @@
 package devops.v1
 
-def Compile(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, build_tool) {
-    withCredentials([string(credentialsId: SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
+def Compile(build_tool) {
+    
         if (build_tool == 'maven') {
             container('maven') {
                 sh '''
@@ -42,7 +42,7 @@ def Compile(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, build_tool) {
                 }
         }
     }
-}
+
 
 def BuildImage(BUILDKIT_ADDR, FULL_IMAGE, DOCKER_CONFIG) {
     String REGISTRY_HOST = FULL_IMAGE.tokenize('/')[0]

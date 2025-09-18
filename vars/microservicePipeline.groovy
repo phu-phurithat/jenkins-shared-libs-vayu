@@ -123,7 +123,7 @@ def call(args) {
       echo "build_tool = ${build_tool}"
 
       stage('Build') {
-        builder.Compile(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, build_tool)
+        builder.Compile(build_tool)
       }
 
       stage('Sorce Code Scan') {
