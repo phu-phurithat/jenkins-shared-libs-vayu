@@ -7,13 +7,14 @@ def ImportReport(fullPath, imageTag, component) {
   def productId = sh(
                         script: """
                             curl -s -k -H "Authorization: Token ${DOJO_KEY}" \
-                                 "${DEFECTDOJO_BASE_URL}/api/v2/products?name=${productName}" \
-
+                            -H "Content-Type: application/json" \
+                            "${DEFECTDOJO_BASE_URL}/api/v2/products/?name=${productName}" 
                         """,
                         returnStdout: true
                         )
   echo "productId: ${productId}"
-  productId = readJSON(text: productId).results[0]?.id ?: null
+  String responseContent = readJSON(text: productId)
+  productId = responseContent.results[0]?.id ?: null
 //   def responseProduct = sh(
 //     script: """curl -s -k -H "Authorization: Token ${DOJO_KEY}" "${DEFECTDOJO_BASE_URL}/api/v2/products/?name=${productName}" """,
 //     returnStdout: true
