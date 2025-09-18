@@ -1,18 +1,18 @@
 package devops.v1
-String productName = ''
-String engagementName = ''
+
 def ImportReport(fullPath, imageTag,component) {
-  productName= "${fullPath}-${component}"
-  engagementName= "${component}:${imageTag}"
+ String productName= "${fullPath}-${component}"
+String engagementName= "${component}:${imageTag}"
   
   def productId = sh(
                         script: """
                             curl -s -k -H "Authorization: Token ${DOJO_KEY}" \
                                  "${DEFECTDOJO_BASE_URL}/api/v2/products/?name=${productName}" \
-                                 | jq '.results[0].id'
+                                 
                         """,
                         returnStdout: true
-                        ).trim()
+                        )
+    productId = readJson(text: productId).results[0]?.id ?: null
    if (productId == "null" || productId == "") {
                         echo "Product not found. Creating..."
                         productId = sh(
@@ -24,18 +24,18 @@ def ImportReport(fullPath, imageTag,component) {
                                     | jq '.id'
                             """,
                             returnStdout: true
-                        ).trim()
+                        )
                     }
 
   def engagementId = sh(
                         script: """
                             curl -s -k -H "Authorization: Token ${DOJO_KEY}" \
-                                 "${DEFECTDOJO_BASE_URL}/api/v2/engagements/?name=${engagementName}&product=${productId}" \
-                                 | jq '.results[0].id'
+                                 "${DEFECTDOJO_BASE_URL}/api/v2/engagements/?name=${engagementName}&product=${productId}" 
                         """,
                         returnStdout: true
-                       ).trim()
-   if (engagementId == "null" || engagementId == "") {
+                       )
+      engagementId = readJSON(text: engagementId).results[0]?.id ?: null
+   if (engagementId == null || engagementId == "") {
                         echo "Engagement not found. Creating..."
                         engagementId = sh(
                             script: """
