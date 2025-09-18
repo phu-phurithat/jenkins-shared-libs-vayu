@@ -4,15 +4,22 @@ def ImportReport(fullPath, imageTag,component) {
  String productName= "${fullPath}-${component}"
 String engagementName= "${component}:${imageTag}"
   
-  def productId = sh(
-                        script: """
-                            curl -s -k -H "Authorization: Token ${DOJO_KEY}" \
-                                 "${DEFECTDOJO_BASE_URL}/api/v2/products/?name=${productName}" \
+  // def productId = sh(
+  //                       script: """
+  //                           curl -s -k -H "Authorization: Token ${DOJO_KEY}" \
+  //                                "${DEFECTDOJO_BASE_URL}/api/v2/products/?name=${productName}" \
                                  
-                        """,
-                        returnStdout: true
-                        )
-    productId = readJson(text: productId).results[0]?.id ?: null
+  //                       """,
+  //                       returnStdout: true
+  //                       )
+    // productId = readJson(text: productId).results[0]?.id ?: null
+    def responseProduct = sh(
+    script: """curl -s -k -H "Authorization: Token ${DOJO_KEY}" "${DEFECTDOJO_BASE_URL}/api/v2/products/?name=${productName}" """,
+    returnStdout: true
+)
+
+def productId = (responseProduct =~ /"id":\s*(\d+)/)[0][1] ?: null
+   
    if (productId == "null" || productId == "") {
                         echo "Product not found. Creating..."
                         productId = sh(
@@ -27,14 +34,18 @@ String engagementName= "${component}:${imageTag}"
                         )
                     }
 
-  def engagementId = sh(
-                        script: """
-                            curl -s -k -H "Authorization: Token ${DOJO_KEY}" \
-                                 "${DEFECTDOJO_BASE_URL}/api/v2/engagements/?name=${engagementName}&product=${productId}" 
-                        """,
-                        returnStdout: true
-                       )
-      engagementId = readJSON(text: engagementId).results[0]?.id ?: null
+  // def engagementId = sh(
+  //                       script: """
+  //                           curl -s -k -H "Authorization: Token ${DOJO_KEY}" \
+  //                                "${DEFECTDOJO_BASE_URL}/api/v2/engagements/?name=${engagementName}&product=${productId}" 
+  //                       """,
+  //                       returnStdout: true
+  //                      )
+  //     engagementId = readJSON(text: engagementId).results[0]?.id ?: null
+   def responseEngagement = sh(
+    script: """curl -s -k -H "Authorization: Token ${DOJO_KEY}" "${DEFECTDOJO_BASE_URL}/api/v2/engagements/?name=${engagementName}&product=${productId}" """,
+    returnStdout: true)
+    def engagementId = (responseEngagement =~ /"id":\s*(\d+)/)[0][1] ?: null
    if (engagementId == null || engagementId == "") {
                         echo "Engagement not found. Creating..."
                         engagementId = sh(
