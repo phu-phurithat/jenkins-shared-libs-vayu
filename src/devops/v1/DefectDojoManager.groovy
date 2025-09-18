@@ -1,6 +1,6 @@
 package devops.v1
-String productName
-String engagementName
+String productName = ''
+String engagementName = ''
 def ImportReport(fullPath, imageTag,component) {
   productName= "${fullPath}-${component}"
   engagementName= "${component}:${imageTag}"
