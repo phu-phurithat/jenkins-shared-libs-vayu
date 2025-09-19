@@ -5,7 +5,7 @@ def ImportReport(fullPath, imageTag, component) {
   String engagementName = "${component}:${imageTag}"
    withCredentials([string(credentialsId: DOJO_KEY, variable: 'DOJO_KEY')]) {
 
-  def productId = sh(
+  def productCheck = sh(
                         script: """
                           curl -s -k \
                             "${DEFECTDOJO_BASE_URL}/api/v2/products/?name=${productName}" \
@@ -13,10 +13,10 @@ def ImportReport(fullPath, imageTag, component) {
                         """,
                         returnStdout: true
                         )
-  echo "productId: ${productId}"
+  echo "productCheck: ${productCheck}"
   ///String responseContent = readJSON(text: productId)
-  productId = readJSON(text: productId).results?.isEmpty() ?: null
-  echo "productId after readJSON: ${productId}"
+  productCheck = readJSON(text: productCheck).results?.isEmpty() ?: null
+  echo "productCheck after readJSON: ${productCheck}"
 //   def responseProduct = sh(
 //     script: """curl -s -k -H "Authorization: Token ${DOJO_KEY}" "${DEFECTDOJO_BASE_URL}/api/v2/products/?name=${productName}" """,
 //     returnStdout: true
@@ -24,9 +24,9 @@ def ImportReport(fullPath, imageTag, component) {
 
 //   def productId = (responseProduct =~ /"id":\s*(\d+)/)[0][1] ?: null
 
-  if (!productId) { //null or empty
+  if (productCheck) { //null or empty
     echo 'Product not found. Creating...'
-    productId = sh(
+    productCheck = sh(
                             script: """
                                 curl -s -k -X POST "${DEFECTDOJO_BASE_URL}/api/v2/products/" \
                                     -H "Authorization: Token ${DOJO_KEY}" \
@@ -36,24 +36,24 @@ def ImportReport(fullPath, imageTag, component) {
                         )
   }
 
-  def engagementId = sh(
+  def engagementCheck = sh(
                         script: """
                             curl -s -k -H "Authorization: Token ${DOJO_KEY}" \
                                  "${DEFECTDOJO_BASE_URL}/api/v2/engagements?name=${engagementName}&product=${productId}"
                         """,
                         returnStdout: true
                        )
-  echo "engagementId: ${engagementId}"
-  responseContent = readJSON(text: engagementId)
-  engagementId = readJSON(text: responseContent).results?.isEmpty() ?: null
-  echo "engagementId after readJSON: ${engagementId}"
+  echo "engagementCheck: ${engagementCheck}"
+ 
+  engagementCheck = readJSON(text: engagementCheck).results?.isEmpty() ?: null
+  echo "engagementCheck after readJSON: ${engagementCheck}"
   // def responseEngagement = sh(
   //   script: """curl -s -k -H "Authorization: Token ${DOJO_KEY}" "${DEFECTDOJO_BASE_URL}/api/v2/engagements/?name=${engagementName}&product=${productId}" """,
   //   returnStdout: true)
   // def engagementId = (responseEngagement =~ /"id":\s*(\d+)/)[0][1] ?: null
-  if (!engagementId) {
+  if (engagementCheck) {
     echo 'Engagement not found. Creating...'
-    engagementId = sh(
+    engagementCheck = sh(
                             script: """
                                 curl -s -k -X POST "${DEFECTDOJO_BASE_URL}/api/v2/engagements/" \
                                     -H "Authorization: Token ${DOJO_KEY}" \
