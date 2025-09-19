@@ -3,6 +3,7 @@ package devops.v1
 def ImportReport(fullPath, imageTag, component) {
   String productName = "${fullPath}-${component}"
   String engagementName = "${component}:${imageTag}"
+   withCredentials([string(credentialsId: DOJO_KEY, variable: 'DOJO_KEY')]) {
 
   def productId = sh(
                         script: """
@@ -64,7 +65,7 @@ def ImportReport(fullPath, imageTag, component) {
                             returnStdout: true
                         )
   }
-  withCredentials([string(credentialsId: DOJO_KEY, variable: 'DOJO_KEY')]) {
+ 
     //SonarQube Scan Source Code
     sh """
 
