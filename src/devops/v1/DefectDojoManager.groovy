@@ -14,8 +14,8 @@ def ImportReport(fullPath, imageTag, component) {
                         returnStdout: true
                         )
   echo "productId: ${productId}"
-  String responseContent = readJSON(text: productId)
-  productId = readJSON(text: responseContent).results?.isEmpty() ?: null
+  ///String responseContent = readJSON(text: productId)
+  productId = readJSON(text: productId).results?.isEmpty() ?: null
   echo "productId after readJSON: ${productId}"
 //   def responseProduct = sh(
 //     script: """curl -s -k -H "Authorization: Token ${DOJO_KEY}" "${DEFECTDOJO_BASE_URL}/api/v2/products/?name=${productName}" """,
