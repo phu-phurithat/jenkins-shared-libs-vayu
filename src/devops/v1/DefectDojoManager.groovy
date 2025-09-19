@@ -15,7 +15,7 @@ def ImportReport(fullPath, imageTag, component) {
                         )
   echo "productId: ${productId}"
   String responseContent = readJSON(text: productId)
-  productId = readJSON(text: responseContent).results?.get(0) ?: null
+  productId = readJSON(text: responseContent).results?.isEmpty() ?: null
 //   def responseProduct = sh(
 //     script: """curl -s -k -H "Authorization: Token ${DOJO_KEY}" "${DEFECTDOJO_BASE_URL}/api/v2/products/?name=${productName}" """,
 //     returnStdout: true
@@ -23,7 +23,7 @@ def ImportReport(fullPath, imageTag, component) {
 
 //   def productId = (responseProduct =~ /"id":\s*(\d+)/)[0][1] ?: null
 
-  if (productId == 'null' || productId == '') {
+  if (!productId) { //null or empty
     echo 'Product not found. Creating...'
     productId = sh(
                             script: """
@@ -43,12 +43,12 @@ def ImportReport(fullPath, imageTag, component) {
                         returnStdout: true
                        )
   echo "engagementId: ${engagementId}"
-  engagementId = readJSON(text: engagementId).results?.get(0) ?: null
+  engagementId = readJSON(text: engagementId).results?.isEmpty() ?: null
   // def responseEngagement = sh(
   //   script: """curl -s -k -H "Authorization: Token ${DOJO_KEY}" "${DEFECTDOJO_BASE_URL}/api/v2/engagements/?name=${engagementName}&product=${productId}" """,
   //   returnStdout: true)
   // def engagementId = (responseEngagement =~ /"id":\s*(\d+)/)[0][1] ?: null
-  if (engagementId == null || engagementId == '') {
+  if (!engagementId) {
     echo 'Engagement not found. Creating...'
     engagementId = sh(
                             script: """
