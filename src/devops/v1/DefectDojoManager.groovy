@@ -16,6 +16,7 @@ def ImportReport(fullPath, imageTag, component) {
   echo "productId: ${productId}"
   String responseContent = readJSON(text: productId)
   productId = readJSON(text: responseContent).results?.isEmpty() ?: null
+  echo "productId after readJSON: ${productId}"
 //   def responseProduct = sh(
 //     script: """curl -s -k -H "Authorization: Token ${DOJO_KEY}" "${DEFECTDOJO_BASE_URL}/api/v2/products/?name=${productName}" """,
 //     returnStdout: true
@@ -43,7 +44,9 @@ def ImportReport(fullPath, imageTag, component) {
                         returnStdout: true
                        )
   echo "engagementId: ${engagementId}"
-  engagementId = readJSON(text: engagementId).results?.isEmpty() ?: null
+  responseContent = readJSON(text: engagementId)
+  engagementId = readJSON(text: responseContent).results?.isEmpty() ?: null
+  echo "engagementId after readJSON: ${engagementId}"
   // def responseEngagement = sh(
   //   script: """curl -s -k -H "Authorization: Token ${DOJO_KEY}" "${DEFECTDOJO_BASE_URL}/api/v2/engagements/?name=${engagementName}&product=${productId}" """,
   //   returnStdout: true)
