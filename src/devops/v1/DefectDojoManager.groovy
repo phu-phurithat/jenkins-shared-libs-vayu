@@ -30,10 +30,11 @@ def ImportReport(fullPath, imageTag, component) {
                             script: """
                                 curl -s -k -X POST "${DEFECTDOJO_BASE_URL}/api/v2/products/" \
                                     -H "Authorization: Token ${DOJO_KEY}" \
-                                    -d '{"name": "${productName}", "description": "Auto-created from Jenkins","prod_type": 1}'
+                                    -d '{"name": "phu-phurithat/microservice-demo-currencyservice-microservice-demo-currencyservice", "description": "Auto-created from Jenkins","prod_type": 1}'
+                                    
                             """,
                             returnStdout: true
-                        )
+                        ).trim()
   }
 
   def engagementCheck = sh(
@@ -42,10 +43,11 @@ def ImportReport(fullPath, imageTag, component) {
                                  "${DEFECTDOJO_BASE_URL}/api/v2/engagements?name=${engagementName}&product=${productId}"
                         """,
                         returnStdout: true
-                       )
+                       ).trim()
   echo "engagementCheck: ${engagementCheck}"
- 
-  engagementCheck = readJSON(text: engagementCheck).results?.isEmpty() ?: null
+  def productID = readJSON(text: productResponse).results ? parsed.results[0].id : null
+  echo "ProductID = ${productID}" //debug
+  engagementCheck = readJSON(text: engagementCheck).results?.isEmpty() ?: null //debug
   echo "engagementCheck after readJSON: ${engagementCheck}"
   // def responseEngagement = sh(
   //   script: """curl -s -k -H "Authorization: Token ${DOJO_KEY}" "${DEFECTDOJO_BASE_URL}/api/v2/engagements/?name=${engagementName}&product=${productId}" """,
