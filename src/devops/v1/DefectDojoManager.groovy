@@ -44,7 +44,7 @@ def ImportReport(fullPath, imageTag, component) {
 
     def productObj = readJSON text: productJson
     productId = productObj.id
-    echo "✅ New :prooduct object:${productObj}"
+   // echo "✅ New :prooduct object:${productObj}"
     echo "✅ New Product ID: ${productId}"
 
     def engagementCheck = sh(
@@ -80,7 +80,7 @@ def ImportReport(fullPath, imageTag, component) {
 
                 def engagementObj = readJSON text: engagementJson
                 engagementId = engagementObj.id
-                echo "✅ New :engagementObj:${engagementObj}"
+               // echo "✅ New :engagementObj:${engagementObj}"
                 echo "✅ New Engagement ID: ${engagementId}"
                     }
 
