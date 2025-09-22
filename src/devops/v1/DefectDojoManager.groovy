@@ -1,76 +1,89 @@
 package devops.v1
 
 def ImportReport(fullPath, imageTag, component) {
-  String productName = "${fullPath}-${component}"
-  String engagementName = "${component}:${imageTag}"
+  def productName = "${fullPath}-${component}"
+  def engagementName = "${component}:${imageTag}"
+  def productJson
+  def productId 
+  def engagementJson
+  def engagementId 
+  def today = sh(script: "date +%Y-%m-%d", returnStdout: true).trim()
+  def nextWeek = sh(script: "date -d +7days +%Y-%m-%d", returnStdout: true).trim()
    withCredentials([string(credentialsId: DOJO_KEY, variable: 'DOJO_KEY')]) {
-
-  def productCheck = sh(
+    // Check if Product exists
+    def productCheck = sh(
                         script: """
                           curl -s -k \
                             "${DEFECTDOJO_BASE_URL}/api/v2/products/?name=${productName}" \
-                            -H "Authorization: Token ${DOJO_KEY}" 
+                            -H "Authorization: Token $DOJO_KEY" 
                         """,
                         returnStdout: true
                         )
+
   echo "productCheck: ${productCheck}"
-  ///String responseContent = readJSON(text: productId)
-  productCheck = readJSON(text: productCheck).results?.isEmpty() ?: null
-  echo "productCheck after readJSON: ${productCheck}"
-//   def responseProduct = sh(
-//     script: """curl -s -k -H "Authorization: Token ${DOJO_KEY}" "${DEFECTDOJO_BASE_URL}/api/v2/products/?name=${productName}" """,
-//     returnStdout: true
-// )
+  productJson = readJSON text: productCheck
+   if (productJson!=null && productJson.count.toInteger() > 0) {
+                       productId = productJson.results[0].id
+                        echo "✅ Found Product ID: ${productId}"
+                    } else {
+                       echo "❌ Product ${productName} not found!"
+                   echo "Creating new product...productName: ${productName}"
+                productJson = sh(
+        script: """
+          curl -s -k -X POST "https://defectdojo.phurithat.site/api/v2/products/" \
+            -H "Authorization: Token $DOJO_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{
+                  "name": "${productName}",
+                  "description": "Created from Jenkins",
+                  "prod_type": 1
+                }'
+        """,
+        returnStdout: true
+    )
 
-//   def productId = (responseProduct =~ /"id":\s*(\d+)/)[0][1] ?: null
+    def productObj = readJSON text: productJson
+    productId = productObj.id
+    echo "✅ New :prooductbj:${productObj}"
+    echo "✅ New Product ID: ${productId}"
 
-  if (productCheck) { //null or empty
-    echo 'Product not found. Creating...'
-    productCheck = sh(
-                            script: """
-                                curl -s -k -X POST "${DEFECTDOJO_BASE_URL}/api/v2/products/" \
-                                    -H "Authorization: Token ${DOJO_KEY}" \
-                                    -d '{"name": "phu-phurithat/microservice-demo-currencyservice-microservice-demo-currencyservice", "description": "Auto-created from Jenkins","prod_type": 1}'
-                                    
-                            """,
-                            returnStdout: true
-                        ).trim()
-  }
-
-  def engagementCheck = sh(
+    def engagementCheck = sh(
                         script: """
-                            curl -s -k -H "Authorization: Token ${DOJO_KEY}" \
-                                 "${DEFECTDOJO_BASE_URL}/api/v2/engagements?name=${engagementName}&product=${productId}"
+                          curl -s -k "https://defectdojo.phurithat.site/api/v2/engagements/?name=${productName}&product=${productId}" \
+                            -H "Authorization: Token $defectdojo_api_key"
                         """,
                         returnStdout: true
-                       ).trim()
-  echo "engagementCheck: ${engagementCheck}"
-  def productID = readJSON(text: productResponse).results ? parsed.results[0].id : null
-  echo "ProductID = ${productID}" //debug
-  engagementCheck = readJSON(text: engagementCheck).results?.isEmpty() ?: null //debug
-  echo "engagementCheck after readJSON: ${engagementCheck}"
-  // def responseEngagement = sh(
-  //   script: """curl -s -k -H "Authorization: Token ${DOJO_KEY}" "${DEFECTDOJO_BASE_URL}/api/v2/engagements/?name=${engagementName}&product=${productId}" """,
-  //   returnStdout: true)
-  // def engagementId = (responseEngagement =~ /"id":\s*(\d+)/)[0][1] ?: null
-  if (engagementCheck) {
-    echo 'Engagement not found. Creating...'
-    engagementCheck = sh(
-                            script: """
-                                curl -s -k -X POST "${DEFECTDOJO_BASE_URL}/api/v2/engagements/" \
-                                    -H "Authorization: Token ${DOJO_KEY}" \
-                                    -H "Content-Type: application/json" \
-                                    -d '{
-                                        "name": "${engagementName}",
-                                        "product": ${productId},
-                                        "status": "In Progress",
-                                        "engagement_type": "CI/CD"
-                                    }'
-                            """,
-                            returnStdout: true
-                        )
-  }
- 
+                    )
+ engagementJson = readJSON text: engagementCheck
+   if (engagementJson!=null && engagementJson.count.toInteger() > 0) {
+                       engagementId = engagementJson.results[0].id
+                        echo "✅ Found Engagement ID: ${engagementId}"
+                    } else {
+                        echo "❌ Engagement ${engagementName} not found in Product ID ${productId}!"
+                        echo "Creating new engagement...engagementName: ${engagementName}"
+                         engagementJson = sh(
+  script: """
+    curl -s -k -X POST "${DEFECTDOJO_BASE_URL}/api/v2/engagements/" \
+      -H "Authorization: Token $DOJO_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+            "name": "${engagementName}",
+            "product": "${productId}",
+            "status": "In Progress",
+            "target_start": "${today}",
+            "target_end": "${nextWeek}"
+          }'
+  """,
+  returnStdout: true
+)
+
+
+                def engagementObj = readJSON text: engagementJson
+                engagementId = engagementObj.id
+                echo "✅ New :engagementObj:${engagementObj}"
+                echo "✅ New Engagement ID: ${engagementId}"
+                    }
+
     //SonarQube Scan Source Code
     sh """
 
@@ -89,7 +102,7 @@ def ImportReport(fullPath, imageTag, component) {
         """
     //Trivy Scan Dependency
     sh """
-          curl -k -X POST "https://defectdojo.phurithat.site/api/v2/reimport-scan/" \
+          curl -k -X POST "${DEFECTDOJO_BASE_URL}/api/v2/reimport-scan/" \
             -H "Authorization: Token ${DOJO_KEY}" \
             -F scan_type="CycloneDX Scan" \
             -F test_title="CycloneDX Scan Dependency" \
@@ -105,7 +118,7 @@ def ImportReport(fullPath, imageTag, component) {
 
         //Trivy Scan Image
         sh """
-          curl -k -X POST "https://defectdojo.phurithat.site/api/v2/reimport-scan/" \
+          curl -k -X POST "${DEFECTDOJO_BASE_URL}/api/v2/reimport-scan/" \
             -H "Authorization: Token ${DOJO_KEY}" \
             -F scan_type="CycloneDX Scan" \
             -F test_title="CycloneDX Scan Image" \
@@ -119,4 +132,5 @@ def ImportReport(fullPath, imageTag, component) {
             -F auto_create_context=true
         """
   }
+}
 }
