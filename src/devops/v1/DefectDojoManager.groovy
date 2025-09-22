@@ -49,7 +49,7 @@ def ImportReport(fullPath, imageTag, component) {
 
     def engagementCheck = sh(
                         script: """
-                          curl -s -k "https://defectdojo.phurithat.site/api/v2/engagements/?name=${productName}&product=${productId}" \
+                          curl -s -k "${DEFECTDOJO_BASE_URL}/api/v2/engagements/?name=${productName}&product=${productId}" \
                             -H "Authorization: Token $DOJO_KEY"
                         """,
                         returnStdout: true
