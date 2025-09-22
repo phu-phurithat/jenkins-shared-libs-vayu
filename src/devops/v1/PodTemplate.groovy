@@ -92,7 +92,8 @@ class PodTemplate implements Serializable {
   }
 
   PodTemplate addGo(String goVersion) {
-    goVersion = goVersion.tokenize('.') // eg. 1.23 -> [1, 23]
+    goVersion = goVersion.split("\\.")
+    //goVersion = goVersion.tokenize('.') // eg. 1.23 -> [1, 23]
     String goImage = "golang:${goVersion[0]}.${goVersion[1]}-alpine"
     addContainerIfMissing([
       name           : 'golang',
