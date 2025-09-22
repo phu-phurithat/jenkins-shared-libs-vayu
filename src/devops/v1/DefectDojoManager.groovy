@@ -44,13 +44,13 @@ def ImportReport(fullPath, imageTag, component) {
 
     def productObj = readJSON text: productJson
     productId = productObj.id
-    echo "✅ New :prooductbj:${productObj}"
+    echo "✅ New :prooduct object:${productObj}"
     echo "✅ New Product ID: ${productId}"
 
     def engagementCheck = sh(
                         script: """
                           curl -s -k "https://defectdojo.phurithat.site/api/v2/engagements/?name=${productName}&product=${productId}" \
-                            -H "Authorization: Token $defectdojo_api_key"
+                            -H "Authorization: Token $DOJO_KEY"
                         """,
                         returnStdout: true
                     )
