@@ -1,7 +1,9 @@
 import devops.v1.*
 
 def call(args) {
-  // args only contain DEPLOYMENT_REPO, TRIGGER_TOKEN, MICROSERVICE_NAME, BRANCH (optional), AUTO_DEPLOY, TARGET_ENV
+  // args only contain
+  // DEPLOYMENT_REPO, TRIGGER_TOKEN, MICROSERVICE_NAME, BRANCH (optional), AUTO_DEPLOY, TARGET_ENV
+  // IMAGE_TAG (optional)
 
   // Constants
   final String SONAR_HOST        = 'http://sonarqube-sonarqube.sonarqube.svc.cluster.local:9000'
@@ -10,19 +12,6 @@ def call(args) {
   final String DOCKER_CONFIG     = '/root/.docker/config.json'
   
 
-  // ENV
-  // env.TRIVY_BASE_URL = 'http://trivy.trivy.svc.cluster.local:4954'
-  // env.DEFECTDOJO_BASE_URL = 'https://defectdojo.phurithat.site'
-  // env.DOJO_KEY = 'defectdojo_api_key'
-  // env.SONAR_TOKEN =  'sonar_token'
-  // env.HARBOR_CRED = 'harbor-cred'
-  // env.JENKINS_CRED = 'jenkins-cred'
-  // env.GITLAB_NONPROD_KEY = 'gitlab-nonprod-key'
-  // env.GITLAB_PROD_KEY = 'gitlab-prod-key'
-  // env.HELM_PATH = 'vayu-helm'
-  // env.HELM_NONPROD_REPO = 'https://gitlab.devopsnonprd.vayuktbcs/api/v4/projects/7410/packages/helm/stable'
-  // env.OCP_NONPROD_AGENT = 'ocp-nonprod-agent'
-  // env.OCP_PROD_AGENT = 'ocp-prod-agent'
   // Helper classes
   def pt = new PodTemplate()
   def credManager = new CredManager()
@@ -31,8 +20,12 @@ def call(args) {
   def defectdojo = new DefectDojoManager()
   def prep = new Preparer()
   def dm = new DeployManager()
+  def gitm = new GitManager()
+
+  // Variables
   def config = [:]
   def properties = [:]
+  String appName = ''
   String microserviceRepo = ''
   String fullImageName = ''
   String imageTag = 'latest'
@@ -44,6 +37,8 @@ def call(args) {
     // Basic input validation
     prep.validateArguments(args)
     credManager.globalENV()
+
+    appName = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '').toLowerCase()
 
     dir('deployment') {
       stage('Checkout Deployment Repository') {
@@ -97,6 +92,8 @@ def call(args) {
           error "Properties file not found at ${propertiesPath}"
         }
 
+        // imageTag = args.IMAGE_TAG ?: sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+        imageTag = 'latest'
         fullImageName = args.TARGET_ENV in ['prod', 'production'] ?
         "${config.registry.prod}/${args.MICROSERVICE_NAME}:${imageTag}" :
         "${config.registry.nonprod}/${args.MICROSERVICE_NAME}:${imageTag}"
@@ -105,9 +102,9 @@ def call(args) {
       }
     }
 
-      stage('Prepare Agent') {
-        pt.injectConfig(properties, args)
-      }
+    stage('Prepare Agent') {
+      pt.injectConfig(properties, args)
+    }
   }
 
   // ------------------- Run inside Kubernetes podTemplate -------------------
@@ -152,7 +149,7 @@ def call(args) {
         defectdojo.ImportReport(fullPath, imageTag,component)
       }
 
-      if (args.AUTO_DEPLOY in [true, 'true']) {
+      if (args.AUTO_DEPLOY in [true, 'true'] ) {
         dir('deployment') {
           stage('Checkout Deployment Repository') {
             // Re-clone to ensure clean state inside pod
@@ -161,17 +158,44 @@ def call(args) {
 
           String kubeconfigCred = config.environments[args.TARGET_ENV].cluster.toLowerCase()
           String namespace    = config.environments[args.TARGET_ENV].namespace.toLowerCase()
-          String helmPath   = './helm-chart'   // path where your Helm chart lives
+          String valuePath   = "./deployments/${args.TARGET_ENV}/${args.MICROSERVICE_NAME}.yaml"   // path where your Helm chart lives
           String helmRelease = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '').toLowerCase()
 
-          dm.deployHelm(
-          kubeconfigCred: kubeconfigCred,
-          namespace: namespace,
-          helmPath: helmPath,
-          helmRelease: helmRelease
-          )
+          // Update Helm values with the new image
+          dm.updateHelmValuesFile(valuePath, fullImageName)
+
+          // Setup Helm (remove default stable repo and add ours)
+          gitm.setupHelm()
+
+          // Deploy via Helm if auto-deploy is enabled
+          boolean isDeploySuccess = false
+          try {
+            dm.deployHelm(
+              kubeconfigCred: kubeconfigCred,
+              namespace: namespace,
+              valuePath: valuePath,
+              helmRelease: helmRelease
+            )
+            isDeploySuccess = true
+          } catch (Exception e) {
+            isDeploySuccess = false
+            echo "Deployment to ${args.TARGET_ENV} failed. Attempting rollback..."
+            dm.rollbackHelm(helmRelease, namespace, kubeconfigCred)
+          }
+
+          if (isDeploySuccess) {
+            echo "Deployment to ${args.TARGET_ENV} successful."
+            gitm.pushChanges(
+              "Update ${args.MICROSERVICE_NAME} manifest for ${args.TARGET_ENV}",
+              args.DEPLOYMENT_REPO,
+              env.GITHUB_CRED
+            )
+          }
         }
+      } else {
+        echo 'Auto-deploy is disabled. Skipping deployment step.'
       }
     }
   }
+// ------------------- End of podTemplate -------------------
 }

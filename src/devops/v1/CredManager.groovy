@@ -12,9 +12,10 @@ package devops.v1
     env.GITLAB_NONPROD_KEY = "gitlab-nonprod-key"
     env.GITLAB_PROD_KEY = "gitlab-prod-key"
     env.HELM_PATH = "vayu-helm"
-    env.HELM_NONPROD_REPO = "https://gitlab.devopsnonprd.vayuktbcs/api/v4/projects/7410/packages/helm/stable"
+    env.HELM_NONPROD_REPO = "https://raw.githubusercontent.com/phu-phurithat/helm-template/main"
     env.OCP_NONPROD_AGENT = "ocp-nonprod-agent"
     env.OCP_PROD_AGENT = "ocp-prod-agent"
     env.SONAR_TOKEN =  'sonar_token'
+    env.GITHUB_CRED = 'github-cred'
     
   }

@@ -7,4 +7,5 @@ microservicePipeline(
   BRANCH: "<BRANCH_NAME>",
   AUTO_DEPLOY: true,
   TARGET_ENV: "<TARGET_ENV>"  // e.g., dev, sit, uat, prod
+  IMAGE_TAG: "<IMAGE_TAG>" // e.g. v1.0.0 (optional, default: git commit hash)
 )

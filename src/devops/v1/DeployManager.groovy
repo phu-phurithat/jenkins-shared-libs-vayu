@@ -9,19 +9,18 @@ def deployHelm(args) {
 
   String kubeconfigCred = args.kubeconfigCred
   String NAMESPACE    = args.namespace
-  String HELM_PATH   = args.helmPath
+  String VALUE_PATH   = args.valuePath
   String HELM_RELEASE = args.helmRelease
 
   container('helm') {
-      stage('Helm Lint & Dry-Run') {
+      stage('Helm Dry-Run') {
         try {
-          sh "helm lint ${args.helmPath}"
           withCredentials([file(credentialsId: args.kubeconfigCred, variable: 'KUBECONFIG_FILE')]) {
             sh """
             export KUBECONFIG=${KUBECONFIG_FILE}
-            helm upgrade --install ${HELM_RELEASE} ${HELM_PATH} \
+            helm upgrade --install ${HELM_RELEASE} stable/app \
+              -f ${VALUE_PATH} \
               --namespace ${NAMESPACE} \
-              --create-namespace \
               --dry-run=client
           """
           }
@@ -35,33 +34,69 @@ def deployHelm(args) {
           withCredentials([file(credentialsId: kubeconfigCred, variable: 'KUBECONFIG_FILE')]) {
             sh """
           export KUBECONFIG=${KUBECONFIG_FILE}
-          helm upgrade --install ${HELM_RELEASE} ${HELM_PATH} \
+          helm upgrade --install ${HELM_RELEASE} stable/app \
+            -f ${VALUE_PATH} \
             --namespace ${NAMESPACE} \
-            --create-namespace \
-            --wait --timeout 5m
+            --wait --timeout 30s
           """
           }
         } catch (Exception e) {
-          error "Helm deploy failed: ${e}"
+          error "Deployment failed: ${e}"
         }
       }
   }
 }
 
-// TODO : In deployment repo will have $KIND/$ENV/$MS_VALUES.yaml
-// $KIND - deployment, statefulset, daemonset
-// $ENV - dev, sit, uat, prod
-// $MS_VALUES - microservice name
+def rollbackHelm(helmRelease, namespace, kubeconfigCred) {
+  // @param helmRelease: String - Helm release name
+  // @param namespace: String - Kubernetes namespace
+  // @param kubeconfigCred: String - Jenkins credential ID for kubeconfig file
 
-// On helm repo will have 
-// app
-//  - chart.yaml
-//  - templates
-//    - deployment.yaml
-//    - service.yaml
-//    - _helpers.tpl
-//    - ingress.yaml
-//    - hpa.yaml
-//    - serviceaccount.yaml
-//  - values.yaml
+  container('helm') {
+    try {
+      withCredentials([file(credentialsId: kubeconfigCred, variable: 'KUBECONFIG_FILE')]) {
+        String currentRevision = sh(
+            script: '''
+                export KUBECONFIG="$KUBECONFIG_FILE"
+                helm list -n ${namespace} -o json | jq -r '.[] | select(.name=="${helmRelease}") | .revision' 2>/dev/null || echo 'unknown'
+            ''',
+            returnStdout: true
+        ).trim()
+        String lastRevision = (currentRevision.isInteger() && currentRevision.toInteger() > 1) ? 
+          (currentRevision.toInteger() - 1).toString() : null
 
+
+        if (lastRevision) {
+          sh """
+            export KUBECONFIG=${KUBECONFIG_FILE}
+            helm rollback ${helmRelease} ${lastRevision} -n ${namespace}
+          """
+          echo "Rolled back Helm release ${helmRelease} to revision ${lastRevision} in namespace ${namespace}"
+        } else {
+          echo "No previous Helm revision found for release ${helmRelease} in namespace ${namespace}"
+        }
+      }
+    } catch (Exception e) {
+      error "Helm rollback failed: ${e}"
+    }
+  }
+}
+
+def updateHelmValuesFile(valuePath, imageFullName) {
+  // @param valuePath: String - Path to Helm values.yaml file
+  // @param imageFullName: String - Full image name with tag to set in values.yaml
+
+  if (!fileExists(valuePath)) {
+    error "Helm values file not found at ${valuePath}"
+  }
+
+  def helmValues = readYaml file: valuePath
+  if (!helmValues.image) {
+    helmValues.image = [:]
+  }
+  helmValues.image.repository = imageFullName.tokenize(':')[0]
+  helmValues.image.tag = imageFullName.tokenize(':')[1]
+
+  writeYaml file: valuePath, data: helmValues , overwrite: true
+  echo "Updated Helm values file at ${valuePath} with image ${imageFullName}"
+}
