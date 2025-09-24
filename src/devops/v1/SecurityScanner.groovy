@@ -3,26 +3,25 @@ package devops.v1
 def SorceCodeScan(sonarProjectKey, sonarProjectName, language) {
      withCredentials([string(credentialsId: SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
           // function to check if project exists
-          def projectExists = sh(
-              script: """
-                curl -s -u ${SONAR_TOKEN}: \
-                "${SONAR_BASE_URL}/api/projects/search?projects=${sonarProjectKey}" \
-                | grep -c '"key":"${sonarProjectKey}"'
-              """,
-              returnStdout: true
-          ).trim()
-          echo "Project exists count: ${projectExists}"
-
-          if (projectExists == "0") {
-              echo "Project not found, creating SonarQube project..."
+         def responseContent = sh (
+              script: "curl -u ${SONAR_TOKEN}: ${SONAR_BASE_URL}/api/projects/search?projects=${sonarProjectKey}",
+              returnStdout: true)
+          def response = readJSON text: responseContent
+          def projectExists = response.components
+//| grep -c '"key":"${sonarProjectKey}"'
+          if (!projectExists) {
+              echo "SonarQube Project not found, creating SonarQube project..."
               sh """
-                curl -s -u ${SONAR_TOKEN}: -X POST \
+                curl -u  ${SONAR_TOKEN}: -X POST \
                 "${SONAR_BASE_URL}/api/projects/create?project=${sonarProjectKey}&name=${sonarProjectName}"
               """
-              echo "SonarQube project '${sonarProjectKey}' and '${sonarProjectName}' created."
+              echo "SonarQube project '${sonarProjectName}' created."
           } else {
               echo "SonarQube project '${sonarProjectKey}' already exists."
           }
+       
+
+        
           def sonar_param = [
                     maven:[src: 'src/main/java',
                          binaries: 'target/classes'],
