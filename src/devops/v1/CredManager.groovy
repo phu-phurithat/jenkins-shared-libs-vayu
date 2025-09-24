@@ -7,7 +7,7 @@ package devops.v1
     env.TRIVY_BASE_URL = "http://trivy.trivy.svc.cluster.local:4954"
     env.DEFECTDOJO_BASE_URL = "https://defectdojo.phurithat.site"
     env.BUILDKIT_ADDR     = 'tcp://buildkit-buildkit-service.buildkit.svc.cluster.local:1234'
-    env.DOCKER_CONFIG     = '/root/.docker/config.json'
+    env.DOCKER_CONFIG     = '/root/.docker'
     env.DOJO_KEY = "defectdojo_api_key"
     env.HARBOR_CRED = "harbor-cred"
     env.JENKINS_CRED = "jenkins-cred"
