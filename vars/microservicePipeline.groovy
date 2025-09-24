@@ -79,6 +79,7 @@ def call(args) {
         if (matcher.find()) {
         fullPath = matcher.group(1)
         component = fullPath.tokenize('/')[-1].replace('.git', '')
+        fullPath = fullPath.replace('/', '-')
         productName = "${fullPath}-${component}"
         engagementName = "${component}:${imageTag}"
         sonarProjectKey = "${fullPath}-${component}"
