@@ -43,7 +43,7 @@ def call(args) {
   def productName = '' //"${fullPath}-${component}"
   def engagementName = '' //"${component}:${imageTag}" 
  def sonarProjectKey = '' //{fullPath}-{Component}  
- def sonarProjectName = sonarProjectKey
+ def sonarProjectName = ''
  
 
   // ------------------- Prep on a controller/agent -------------------
@@ -82,6 +82,7 @@ def call(args) {
         productName = "${fullPath}-${component}"
         engagementName = "${component}:${imageTag}"
         sonarProjectKey = "${fullPath}-${component}"
+        sonarProjectName = sonarProjectKey
         echo "fullPath:${fullPath} component: ${component} Product: ${fullPath}-${component}"
         echo  "and Engagement: ${component}:${imageTag}"
     } else {
