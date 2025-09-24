@@ -1,6 +1,6 @@
 package devops.v1
 
-def SorceCodeScan(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, language) {
+def SorceCodeScan(sonarProjectKey, sonarProjectName, language) {
      withCredentials([string(credentialsId: SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
           def sonar_param = [
                     maven:[src: 'src/main/java',
@@ -18,10 +18,10 @@ def SorceCodeScan(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, language) {
                container('sonarqube') {
                     sh """
                     sonar-scanner \
-                             -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                             -Dsonar.projectKey=${sonarProjectKey} \
                              -Dsonar.sources=${sonar_param[language].src} \
                              -Dsonar.java.binaries=${sonar_param[language].binaries} \
-                             -Dsonar.host.url=${SONAR_HOST} \
+                             -Dsonar.host.url=${SONAR_BASE_URL} \
                              -Dsonar.login=${SONAR_TOKEN}
                     """
                }
@@ -30,7 +30,7 @@ def SorceCodeScan(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, language) {
                
                sh """
                     curl -s -u "${SONAR_TOKEN}:" \
-                               "${SONAR_HOST}/api/issues/search?projectKey=${SONAR_PROJECT_KEY}" \
+                               "${SONAR_BASE_URL}/api/issues/search?projectKey=${sonarProjectKey}" \
                                -o sonarqube-report.json
                 """
                return

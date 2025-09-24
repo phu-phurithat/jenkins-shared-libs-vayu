@@ -44,7 +44,7 @@ def Compile(build_tool) {
     }
 
 
-def BuildImage(BUILDKIT_ADDR, FULL_IMAGE, DOCKER_CONFIG) {
+def BuildImage( FULL_IMAGE) {
     String REGISTRY_HOST = FULL_IMAGE.tokenize('/')[0]
     sh """
             buildctl \
