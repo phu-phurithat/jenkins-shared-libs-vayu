@@ -28,7 +28,7 @@ def call(args) {
   String appName = ''
   String microserviceRepo = ''
   String fullImageName = ''
-  String imageTag = 'latest'
+  String imageTag = ''
   def fullPath = ''
   def component = ''
 
