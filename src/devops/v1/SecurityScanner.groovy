@@ -2,6 +2,27 @@ package devops.v1
 
 def SorceCodeScan(sonarProjectKey, sonarProjectName, language) {
      withCredentials([string(credentialsId: SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
+          // function to check if project exists
+          def projectExists = sh(
+              script: """
+                curl -s -u ${SONAR_TOKEN}: \
+                "${sonarUrl}/api/projects/search?projects=${sonarProjectKey}" \
+                | grep -c '"key":"${sonarProjectKey}"'
+              """,
+              returnStdout: true
+          ).trim()
+          echo "Project exists count: ${projectExists}"
+
+          if (projectExists == "0") {
+              echo "Project not found, creating SonarQube project..."
+              sh """
+                curl -s -u ${SONAR_TOKEN}: -X POST \
+                "${sonarUrl}/api/projects/create?project=${sonarProjectKey}&name=${sonarProjectName}"
+              """
+              echo "SonarQube project '${sonarProjectKey}' and '${sonarProjectName}' created."
+          } else {
+              echo "SonarQube project '${sonarProjectKey}' already exists."
+          }
           def sonar_param = [
                     maven:[src: 'src/main/java',
                          binaries: 'target/classes'],
