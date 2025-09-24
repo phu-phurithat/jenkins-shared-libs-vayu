@@ -6,7 +6,7 @@ def SorceCodeScan(sonarProjectKey, sonarProjectName, language) {
           def projectExists = sh(
               script: """
                 curl -s -u ${SONAR_TOKEN}: \
-                "${sonarUrl}/api/projects/search?projects=${sonarProjectKey}" \
+                "${SONAR_BASE_URL}/api/projects/search?projects=${sonarProjectKey}" \
                 | grep -c '"key":"${sonarProjectKey}"'
               """,
               returnStdout: true
@@ -17,7 +17,7 @@ def SorceCodeScan(sonarProjectKey, sonarProjectName, language) {
               echo "Project not found, creating SonarQube project..."
               sh """
                 curl -s -u ${SONAR_TOKEN}: -X POST \
-                "${sonarUrl}/api/projects/create?project=${sonarProjectKey}&name=${sonarProjectName}"
+                "${SONAR_BASE_URL}/api/projects/create?project=${sonarProjectKey}&name=${sonarProjectName}"
               """
               echo "SonarQube project '${sonarProjectKey}' and '${sonarProjectName}' created."
           } else {
