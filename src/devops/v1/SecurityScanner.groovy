@@ -1,7 +1,27 @@
 package devops.v1
 
-def SorceCodeScan(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, language) {
+def SorceCodeScan(sonarProjectKey, sonarProjectName, language) {
      withCredentials([string(credentialsId: SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
+          // function to check if project exists
+         def responseContent = sh (
+              script: "curl -u ${SONAR_TOKEN}: ${SONAR_BASE_URL}/api/projects/search?projects=${sonarProjectKey}",
+              returnStdout: true)
+          def response = readJSON text: responseContent
+          def projectExists = response.components
+//| grep -c '"key":"${sonarProjectKey}"'
+          if (!projectExists) {
+              echo "SonarQube Project not found, creating SonarQube project..."
+              sh """
+                curl -u  ${SONAR_TOKEN}: -X POST \
+                "${SONAR_BASE_URL}/api/projects/create?project=${sonarProjectKey}&name=${sonarProjectName}"
+              """
+              echo "SonarQube project '${sonarProjectName}' created."
+          } else {
+              echo "SonarQube project '${sonarProjectKey}' already exists."
+          }
+       
+
+        
           def sonar_param = [
                     maven:[src: 'src/main/java',
                          binaries: 'target/classes'],
@@ -18,10 +38,10 @@ def SorceCodeScan(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, language) {
                container('sonarqube') {
                     sh """
                     sonar-scanner \
-                             -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                             -Dsonar.projectKey=${sonarProjectKey} \
                              -Dsonar.sources=${sonar_param[language].src} \
                              -Dsonar.java.binaries=${sonar_param[language].binaries} \
-                             -Dsonar.host.url=${SONAR_HOST} \
+                             -Dsonar.host.url=${SONAR_BASE_URL} \
                              -Dsonar.login=${SONAR_TOKEN}
                     """
                }
@@ -30,7 +50,7 @@ def SorceCodeScan(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, language) {
                
                sh """
                     curl -s -u "${SONAR_TOKEN}:" \
-                               "${SONAR_HOST}/api/issues/search?projectKey=${SONAR_PROJECT_KEY}" \
+                               "${SONAR_BASE_URL}/api/issues/search?projectKey=${sonarProjectKey}" \
                                -o sonarqube-report.json
                 """
                return

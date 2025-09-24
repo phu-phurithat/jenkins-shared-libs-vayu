@@ -5,11 +5,13 @@ def call(args) {
   // DEPLOYMENT_REPO, TRIGGER_TOKEN, MICROSERVICE_NAME, BRANCH (optional), AUTO_DEPLOY, TARGET_ENV
   // IMAGE_TAG (optional)
 
-  // Constants
-  final String SONAR_HOST        = 'http://sonarqube-sonarqube.sonarqube.svc.cluster.local:9000'
-  final String SONAR_PROJECT_KEY = 'java'
-  final String BUILDKIT_ADDR     = 'tcp://buildkit-buildkit-service.buildkit.svc.cluster.local:1234'
-  final String DOCKER_CONFIG     = '/root/.docker/config.json'
+  
+  
+  
+  
+   
+   
+  
   
 
   // Helper classes
@@ -31,6 +33,11 @@ def call(args) {
   String imageTag = ''
   def fullPath = ''
   def component = ''
+  def productName = '' //"${fullPath}-${component}"
+  def engagementName = '' //"${component}:${imageTag}" 
+ def sonarProjectKey = '' //{fullPath}-{Component}  
+ def sonarProjectName = ''
+ 
 
   // ------------------- Prep on a controller/agent -------------------
   node('master') { // change label as needed
@@ -67,6 +74,11 @@ def call(args) {
         if (matcher.find()) {
         fullPath = matcher.group(1)
         component = fullPath.tokenize('/')[-1].replace('.git', '')
+        fullPath = fullPath.replace('/', '-')
+        productName = "${fullPath}-${component}"
+        engagementName = "${component}:${imageTag}"
+        sonarProjectKey = "${fullPath}-${component}"
+        sonarProjectName = sonarProjectKey
         echo "fullPath:${fullPath} component: ${component} Product: ${fullPath}-${component}"
         echo  "and Engagement: ${component}:${imageTag}"
     } else {
@@ -125,13 +137,13 @@ def call(args) {
 
       stage('Sorce Code Scan') {
         container('sonarqube') {
-          scanner.SorceCodeScan(SONAR_TOKEN, SONAR_HOST, SONAR_PROJECT_KEY, language)
+          scanner.SorceCodeScan(sonarProjectKey, sonarProjectName,language)
         }
       }
 
       stage('Build Docker Image') {
         container('buildkit') {
-          builder.BuildImage(BUILDKIT_ADDR, fullImageName, DOCKER_CONFIG)
+          builder.BuildImage( fullImageName)
         }
       }
       stage('Dependencies Scan') {
@@ -146,7 +158,7 @@ def call(args) {
       }
 
       stage('Import report') {
-        defectdojo.ImportReport(fullPath, imageTag,component)
+        defectdojo.ImportReport(productName, engagementName)
       }
 
       if (args.AUTO_DEPLOY in [true, 'true'] ) {
