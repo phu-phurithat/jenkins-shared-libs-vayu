@@ -119,7 +119,7 @@ def call(args) {
           String kubeconfigCred = config.environments[args.TARGET_ENV].cluster.toLowerCase()
           String namespace      = config.environments[args.TARGET_ENV].namespace.toLowerCase()
           String valuePath      = "./deployments/${args.TARGET_ENV}/${args.MICROSERVICE_NAME}.yaml"
-          String helmRelease    = args.DEPLOYMENT_REPO.tokenize('/').last().replace('.git', '').toLowerCase()
+          String helmRelease    = args.MICROSERVICE_NAME
 
           // Update Helm values with the new image
           dm.updateHelmValuesFile(valuePath, fullImageName)

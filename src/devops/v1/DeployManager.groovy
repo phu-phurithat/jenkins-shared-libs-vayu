@@ -55,16 +55,7 @@ def rollbackHelm(helmRelease, namespace, kubeconfigCred) {
   container('helm') {
     try {
       withCredentials([file(credentialsId: kubeconfigCred, variable: 'KUBECONFIG_FILE')]) {
-        String currentRevision = sh(
-            script: '''
-                export KUBECONFIG="$KUBECONFIG_FILE"
-                helm list -n ${namespace} -o json | jq -r '.[] | select(.name=="${helmRelease}") | .revision' 2>/dev/null || echo 'unknown'
-            ''',
-            returnStdout: true
-        ).trim()
-        String lastRevision = (currentRevision.isInteger() && currentRevision.toInteger() > 1) ? 
-          (currentRevision.toInteger() - 1).toString() : null
-
+        String lastRevision = getLastHelmRevision(helmRelease, namespace, kubeconfigCred)
 
         if (lastRevision) {
           sh """
@@ -78,6 +69,23 @@ def rollbackHelm(helmRelease, namespace, kubeconfigCred) {
       }
     } catch (Exception e) {
       error "Helm rollback failed: ${e}"
+    }
+  }
+}
+def getLastHelmRevision(helmRelease, namespace, kubeconfigCred) {
+  // Returns the previous revision number for a Helm release using helm status
+  container('helm') {
+    withCredentials([file(credentialsId: kubeconfigCred, variable: 'KUBECONFIG_FILE')]) {
+      String statusOutput = sh(
+        script: """
+          export KUBECONFIG=${KUBECONFIG_FILE}
+          helm status ${helmRelease} -n ${namespace} --output json
+        """,
+        returnStdout: true
+      ).trim()
+      def statusJson = readJSON text: statusOutput
+      int currentRevision = statusJson?.revision ?: 1
+      return (currentRevision > 1) ? (currentRevision - 1).toString() : null
     }
   }
 }
