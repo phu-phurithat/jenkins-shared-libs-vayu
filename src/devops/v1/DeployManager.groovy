@@ -66,11 +66,6 @@ def rollbackHelm(helmRelease, namespace, kubeconfigCred) {
           currentBuild.result = 'UNSTABLE'
         } else {
           echo "No previous Helm revision found for release ${helmRelease} in namespace ${namespace}"
-          echo "Uninstalling release ${helmRelease} in namespace ${namespace} ..."
-          sh """
-            export KUBECONFIG=${KUBECONFIG_FILE}
-            helm uninstall ${helmRelease} -n ${namespace}
-          """
           currentBuild.result = 'FAILURE'
         }
       }
