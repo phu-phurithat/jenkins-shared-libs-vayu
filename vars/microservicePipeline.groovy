@@ -110,46 +110,6 @@ def call(args) {
   // ------------------- Run inside Kubernetes podTemplate -------------------
   podTemplate(yaml: pt.toString()) {
     node(POD_LABEL) {
-      stage('Checkout Source Code Repository') {
-        git url: microserviceRepo, branch: args.BRANCH
-      }
-
-      String build_tool = properties.build_tool.toLowerCase()
-      String language   = properties.language.toLowerCase()
-      echo "build_tool = ${build_tool}"
-
-      stage('Build') {
-        builder.Compile(build_tool)
-      }
-      
-
-      parallel(
-        "Source Code Scan": {
-          container('sonarqube') {
-            scanner.SorceCodeScan(sonarProjectKey, sonarProjectName, language)
-          }
-        },
-        "Build Docker Image": {
-          container('buildkit') {
-            builder.BuildImage(fullImageName)
-          }
-        },
-        "Dependencies Scan": {
-          container('trivy') {
-            scanner.DependenciesScan()
-          }
-        }
-      )
-
-      stage('Image Scan') {
-        container('trivy') {
-          scanner.ImageScan(fullImageName)
-        }
-      }
-
-      stage('Import report') {
-        defectdojo.ImportReport(productName, engagementName)
-      }
 
       if (args.AUTO_DEPLOY in [true, 'true']) {
         dir('deployment') {
