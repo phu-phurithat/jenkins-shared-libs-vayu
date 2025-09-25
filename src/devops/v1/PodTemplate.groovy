@@ -116,7 +116,7 @@ class PodTemplate implements Serializable {
     return this
   }
   PodTemplate addGradle(String javaVersion) {
-    javaVersion = javaVersion.tokenize('.').first().toString() // eg. 21.2.0 -> 21
+    javaVersion = javaVersion.tokenize('.').first() // eg. 21.2.0 -> 21
 
     String gradleImage = "gradle:jdk${javaVersion}"
     addContainerIfMissing([
