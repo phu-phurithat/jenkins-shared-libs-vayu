@@ -110,7 +110,6 @@ def call(args) {
   // ------------------- Run inside Kubernetes podTemplate -------------------
   podTemplate(yaml: pt.toString()) {
     node(POD_LABEL) {
-
       if (args.AUTO_DEPLOY in [true, 'true']) {
         dir('deployment') {
           stage('Checkout Deployment Repository') {
@@ -157,5 +156,5 @@ def call(args) {
       }
     }
   }
-  // ------------------- End of podTemplate -------------------
+// ------------------- End of podTemplate -------------------
 }

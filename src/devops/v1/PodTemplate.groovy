@@ -121,7 +121,7 @@ class PodTemplate implements Serializable {
     String gradleImage = "gradle:jdk${javaVersion}"
     addContainerIfMissing([
       name           : 'gradle',
-      image          : "${gradleImage}",
+      image          : gradleImage,
       imagePullPolicy: 'Always',
       command        : ['cat'],
       tty            : true,
