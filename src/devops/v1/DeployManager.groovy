@@ -55,16 +55,23 @@ def rollbackHelm(helmRelease, namespace, kubeconfigCred) {
   container('helm') {
     try {
       withCredentials([file(credentialsId: kubeconfigCred, variable: 'KUBECONFIG_FILE')]) {
-        String lastRevision = getLastHelmRevision(helmRelease, namespace, kubeconfigCred)
+        String previousRevision = getPreviousHelmRevision(helmRelease, namespace, kubeconfigCred)
 
-        if (lastRevision) {
+        if (previousRevision) {
           sh """
             export KUBECONFIG=${KUBECONFIG_FILE}
             helm rollback ${helmRelease} ${lastRevision} -n ${namespace}
           """
           echo "Rolled back Helm release ${helmRelease} to revision ${lastRevision} in namespace ${namespace}"
+          currentBuild.result = 'UNSTABLE'
         } else {
           echo "No previous Helm revision found for release ${helmRelease} in namespace ${namespace}"
+          echo "Uninstalling release ${helmRelease} in namespace ${namespace} ..."
+          sh """
+            export KUBECONFIG=${KUBECONFIG_FILE}
+            helm uninstall ${helmRelease} -n ${namespace}
+          """
+          currentBuild.result = 'FAILURE'
         }
       }
     } catch (Exception e) {
@@ -72,7 +79,7 @@ def rollbackHelm(helmRelease, namespace, kubeconfigCred) {
     }
   }
 }
-def getLastHelmRevision(helmRelease, namespace, kubeconfigCred) {
+def getPreviousHelmRevision(helmRelease, namespace, kubeconfigCred) {
   // Returns the previous revision number for a Helm release using helm status
   container('helm') {
     withCredentials([file(credentialsId: kubeconfigCred, variable: 'KUBECONFIG_FILE')]) {
