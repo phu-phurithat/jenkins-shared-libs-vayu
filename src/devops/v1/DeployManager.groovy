@@ -60,9 +60,9 @@ def rollbackHelm(helmRelease, namespace, kubeconfigCred) {
         if (previousRevision) {
           sh """
             export KUBECONFIG=${KUBECONFIG_FILE}
-            helm rollback ${helmRelease} ${lastRevision} -n ${namespace}
+            helm rollback ${helmRelease} ${previousRevision} -n ${namespace}
           """
-          echo "Rolled back Helm release ${helmRelease} to revision ${lastRevision} in namespace ${namespace}"
+          echo "Rolled back Helm release ${helmRelease} to revision ${previousRevision} in namespace ${namespace}"
           currentBuild.result = 'UNSTABLE'
         } else {
           echo "No previous Helm revision found for release ${helmRelease} in namespace ${namespace}"
