@@ -110,6 +110,44 @@ def call(args) {
   // ------------------- Run inside Kubernetes podTemplate -------------------
   podTemplate(yaml: pt.toString()) {
     node(POD_LABEL) {
+      
+       stage('Checkout Source Code Repository') {
+        git url: microserviceRepo, branch: args.BRANCH
+      }
+
+      String build_tool = properties.build_tool.toLowerCase()
+      String language   = properties.language.toLowerCase()
+      echo "Using ${build_tool} as Builder"
+      stage('Build') {
+          builder.Compile(build_tool)
+      }
+      // Dynamic parallel stages (conditioned by properties.security.*)
+      def parallelStages = getParallelStages(
+        properties.security ?: [:],
+        scanner,
+        builder,
+        sonarProjectKey,
+        sonarProjectName,
+        language,
+        fullImageName
+      )
+
+      if (parallelStages && !parallelStages.isEmpty()) {
+        parallel parallelStages
+      } else {
+        echo "No security stages enabled"
+      }
+
+      stage('Image Scan') {
+        container('trivy') {
+          scanner.imageScan(fullImageName)
+        }
+      }
+
+      stage('Import report') {
+        defectdojo.importReport(productName, engagementName)
+      }
+
       if (args.AUTO_DEPLOY in [true, 'true']) {
         dir('deployment') {
           stage('Checkout Deployment Repository') {
