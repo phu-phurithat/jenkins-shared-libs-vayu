@@ -44,7 +44,7 @@ def Compile(build_tool) {
     }
 
 
-def BuildImage( FULL_IMAGE) {
+def buildImage( FULL_IMAGE) {
     String REGISTRY_HOST = FULL_IMAGE.tokenize('/')[0]
     sh """
             buildctl \

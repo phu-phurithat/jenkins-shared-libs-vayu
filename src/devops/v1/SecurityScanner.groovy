@@ -1,6 +1,6 @@
 package devops.v1
 
-def SorceCodeScan(sonarProjectKey, sonarProjectName, language) {
+def sourceCodeScan(sonarProjectKey, sonarProjectName, language) {
      withCredentials([string(credentialsId: SONAR_TOKEN, variable: 'SONAR_TOKEN')]) {
           // function to check if project exists
          def responseContent = sh (
@@ -57,7 +57,7 @@ def SorceCodeScan(sonarProjectKey, sonarProjectName, language) {
      
 }
 }
-def DependenciesScan() {
+def dependenciesScan() {
      sh """
               trivy fs . \
                         --server ${TRIVY_BASE_URL} \
