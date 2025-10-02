@@ -15,23 +15,23 @@ def call(args) {
   def dm          = new DeployManager()
   def gitm        = new GitManager()
 
-  // Vars
-  def config            = [:]
-  def properties        = [:]
-  String appName        = ''
+  // Variables
+  def config          = [:]
+  def properties      = [:]
+  String appName      = ''
   String microserviceRepo = ''
-  String fullImageName  = ''
-  String imageTag       = ''
-  def fullPath          = ''
-  def component         = ''
-  def productName       = '' // "${fullPath}-${component}"
-  def engagementName    = '' // "${component}:${imageTag}"
-  def sonarProjectKey   = '' // "{fullPath}-{Component}"
-  def sonarProjectName  = ''
-
+  String fullImageName    = ''
+  String imageTag         = ''
+  def fullPath        = ''
+  def component       = ''
+  def productName     = '' // "${fullPath}-${component}"
+  def engagementName  = '' // "${component}:${imageTag}"
+  def sonarProjectKey = '' // "{fullPath}-{Component}"
+  def sonarProjectName = ''
 
   // ------------------- Prep on a controller/agent -------------------
-  node('master') {
+  node('master') { // change label as needed
+    // Basic input validation
     prep.validateArguments(args)
     credManager.globalENV()
 
@@ -39,12 +39,13 @@ def call(args) {
 
     dir('deployment') {
       stage('Checkout Deployment Repository') {
-        git url: args.DEPLOYMENT_REPO, branch: args.BRANCH
+        git url: args.DEPLOYMENT_REPO, branch: args.BRANCH ?: 'main'
       }
 
       stage('Read Configuration from "config.yaml"') {
         String configPath    = './config.yaml'
         String configContent = readFile(file: configPath, encoding: 'UTF-8')
+
         if (configContent?.trim()) {
           config = readYaml(text: configContent)
         } else {
@@ -56,52 +57,45 @@ def call(args) {
 
     dir('src') {
       stage('Checkout Microservice Code for Preparation') {
-        // Null-safe path to repo in config
-        microserviceRepo = config.kinds?.deployments?.get(args.MICROSERVICE_NAME)
-        if (!microserviceRepo) {
+        microserviceRepo = config.kinds.deployments[args.MICROSERVICE_NAME]
+        if (microserviceRepo) {
+          def matcher = (microserviceRepo =~ /github\.com\/(.*)\.git/)
+          if (matcher.find()) {
+            fullPath        = matcher.group(1)
+            component       = fullPath.tokenize('/')[-1].replace('.git', '')
+            fullPath        = fullPath.replace('/', '-')
+            productName     = "${fullPath}-${component}"
+            engagementName  = "${component}:${imageTag}"
+            sonarProjectKey = "${fullPath}-${component}"
+            sonarProjectName = sonarProjectKey
+
+            echo "fullPath:${fullPath} component:${component} Product:${productName}"
+            echo "and Engagement:${engagementName}"
+          } else {
+            error("Could not parse repo URL: ${microserviceRepo}")
+          }
+        } else {
           error("Microservice '${args.MICROSERVICE_NAME}' not found in configuration.")
         }
 
-        def matcher = (microserviceRepo =~ /github\.com\/(.*)\.git/)
-        if (!matcher.find()) {
-          error("Could not parse repo URL: ${microserviceRepo}")
-        }
-
-        fullPath         = matcher.group(1)
-        component        = fullPath.tokenize('/')[-1].replace('.git', '')
-        fullPath         = fullPath.replace('/', '-')
-        // imageTag placeholder until read properties (we'll set real tag after)
-        imageTag         = args.IMAGE_TAG ?: 'latest'
-        productName      = "${fullPath}-${component}"
-        engagementName   = "${component}:${imageTag}"
-        sonarProjectKey  = "${fullPath}-${component}"
-        sonarProjectName = sonarProjectKey
-
-        echo "fullPath:${fullPath} component:${component} Product:${productName}"
-        echo "Engagement:${engagementName}"
-
         echo "Cloning microservice repository: ${microserviceRepo}"
-        git url: microserviceRepo, branch: args.BRANCH
+        git url: microserviceRepo, branch: 'main'
       }
 
       stage('Read Properties from "devops.properties.yaml"') {
         String propertiesPath = './devops.properties.yaml'
-        if (!fileExists(propertiesPath)) {
+        if (fileExists(propertiesPath)) {
+          def fileContents = readFile(file: propertiesPath, encoding: 'UTF-8')
+          properties = readYaml(text: fileContents)
+        } else {
           error "Properties file not found at ${propertiesPath}"
         }
-        properties = readYaml(text: readFile(file: propertiesPath, encoding: 'UTF-8'))
 
-        // Prefer explicit IMAGE_TAG, else git short SHA, else 'latest'
-        imageTag = args.IMAGE_TAG ?: (
-          sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-        ) ?: 'latest'
-
-        fullImageName = (args.TARGET_ENV in ['prod', 'production']) ?
+        imageTag = args.IMAGE_TAG ?: sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+        // imageTag = 'latest'
+        fullImageName = args.TARGET_ENV in ['prod', 'production'] ?
           "${config.registry.prod}/${args.MICROSERVICE_NAME}:${imageTag}" :
           "${config.registry.nonprod}/${args.MICROSERVICE_NAME}:${imageTag}"
-
-        // refresh engagement now that tag is final
-        engagementName = "${component}:${imageTag}"
 
         prep.validateProperties(properties)
         prep.getConfigSummary(args, config, properties, fullImageName)
@@ -120,13 +114,15 @@ def call(args) {
         git url: microserviceRepo, branch: args.BRANCH
       }
 
-      String build_tool = properties.build_tool?.toLowerCase()
-      String language   = properties.language?.toLowerCase() ?: 'generic'
+      String build_tool = properties.build_tool.toLowerCase()
+      String language   = properties.language.toLowerCase()
       echo "Using ${build_tool} as Builder"
 
       stage('Build') {
         builder.Compile(build_tool)
       }
+
+      def parallelStages = [:]
 
       // Dynamic parallel stages (conditioned by properties.security.*)
       def parallelStages = getParallelStages(
@@ -166,9 +162,13 @@ def call(args) {
           String valuePath      = "./deployments/${args.TARGET_ENV}/${args.MICROSERVICE_NAME}.yaml"
           String helmRelease    = args.MICROSERVICE_NAME
 
+          // Update Helm values with the new image
           dm.updateHelmValuesFile(valuePath, fullImageName)
+
+          // Setup Helm
           gitm.setupHelm()
 
+          // Deploy via Helm if auto-deploy is enabled
           boolean isDeploySuccess = false
           try {
             dm.deployHelm(
@@ -180,6 +180,7 @@ def call(args) {
             isDeploySuccess = true
           } catch (Exception e) {
             error "Deployment to ${args.TARGET_ENV} failed."
+          // dm.rollbackHelm(helmRelease, namespace, kubeconfigCred)
           }
 
           if (isDeploySuccess) {
@@ -196,7 +197,7 @@ def call(args) {
       }
     }
   }
-  // ------------------- End of podTemplate -------------------
+// ------------------- End of podTemplate -----------Q--------
 }
 
 private def getParallelStages(
@@ -211,26 +212,26 @@ private def getParallelStages(
   def stages = [:]
 
   if (security?.code in [true, 'true']) {
-    stages["Source Code Scan"] = {
+    stages['Source Code Scan'] = {
       container('sonarqube') {
         // NOTE: If your method name is actually SourceCodeScan, rename below.
-        scanner.sourceCodeScan(sonarProjectKey, sonarProjectName, language)
+        scanner.SorceCodeScan(sonarProjectKey, sonarProjectName, language)
       }
     }
   }
 
   if (security?.dependency in [true, 'true']) {
-    stages["Dependencies Scan"] = {
+    stages['Dependencies Scan'] = {
       container('trivy') {
-        scanner.dependenciesScan()
+        scanner.DependenciesScan()
       }
     }
   }
 
   if (security?.image in [true, 'true']) {
-    stages["Build Docker Image"] = {
+    stages['Build Docker Image'] = {
       container('buildkit') {
-        builder.buildImage(fullImageName)
+        builder.BuildImage(fullImageName)
       }
     }
   }
