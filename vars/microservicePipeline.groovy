@@ -122,8 +122,6 @@ def call(args) {
         builder.Compile(build_tool)
       }
 
-      def parallelStages = [:]
-
       // Dynamic parallel stages (conditioned by properties.security.*)
       def parallelStages = getParallelStages(
         properties.security ?: [:],
