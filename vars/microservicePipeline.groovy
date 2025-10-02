@@ -58,6 +58,7 @@ def call(args) {
     dir('src') {
       stage('Checkout Microservice Code for Preparation') {
         microserviceRepo = config.kinds.deployments[args.MICROSERVICE_NAME]
+        imageTag = args.IMAGE_TAG ?: sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
         if (microserviceRepo) {
           def matcher = (microserviceRepo =~ /github\.com\/(.*)\.git/)
           if (matcher.find()) {
@@ -91,7 +92,6 @@ def call(args) {
           error "Properties file not found at ${propertiesPath}"
         }
 
-        imageTag = args.IMAGE_TAG ?: sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
         // imageTag = 'latest'
         fullImageName = args.TARGET_ENV in ['prod', 'production'] ?
           "${config.registry.prod}/${args.MICROSERVICE_NAME}:${imageTag}" :
