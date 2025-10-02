@@ -116,30 +116,36 @@ def call(args) {
 
       String build_tool = properties.build_tool.toLowerCase()
       String language   = properties.language.toLowerCase()
-      echo "build_tool = ${build_tool}"
+      echo "Using ${build_tool} as Builder"
 
       stage('Build') {
         builder.Compile(build_tool)
       }
-      
 
-      parallel(
-        "Source Code Scan": {
+      def parallelStages = [:]
+
+      if(security.code in [true, 'true']) {
+        parallelStages["Source Code Scan"] = {
           container('sonarqube') {
             scanner.SorceCodeScan(sonarProjectKey, sonarProjectName, language)
           }
-        },
-        "Build Docker Image": {
-          container('buildkit') {
-            builder.BuildImage(fullImageName)
-          }
-        },
-        "Dependencies Scan": {
+        }
+      }
+      if(security.dependency in [true, 'true']) {
+        parallelStages["Dependencies Scan"] = {
           container('trivy') {
             scanner.DependenciesScan()
           }
         }
-      )
+      }
+      if(security.image in [true, 'true']) {
+        parallelStages["Build Docker Image"] = {
+          container('buildkit') {
+            builder.BuildImage(fullImageName)
+          }
+        }
+      }
+      parallel parallelStages
 
       stage('Image Scan') {
         container('trivy') {
@@ -198,4 +204,34 @@ def call(args) {
     }
   }
 // ------------------- End of podTemplate -------------------
+}
+
+private def getParallelStages(security){
+
+  def stages = [:]
+
+  // Source code scan
+  if(security.code in [true, 'true']) {
+    stage["Source Code Scan"] = {
+      container('sonarqube') {
+        scanner.SorceCodeScan(sonarProjectKey, sonarProjectName, language)
+      }
+    }
+  }
+  if(security.dependency in [true, 'true']) {
+    stage["Dependencies Scan"] = {
+      container('trivy') {
+        scanner.DependenciesScan()
+      }
+    }
+  }
+  if(security.image in [true, 'true']) {
+    stage["Build Docker Image"] = {
+      container('buildkit') {
+        builder.BuildImage(fullImageName)
+      }
+    }
+  }
+
+  return stages
 }
