@@ -71,7 +71,7 @@ def DependenciesScan() {
 
           """
 }
-def ImageScan(FULL_IMAGE) {
+def imageScan(FULL_IMAGE) {
      sh """
               trivy image ${FULL_IMAGE} \
                         --server ${TRIVY_BASE_URL} \
