@@ -134,7 +134,7 @@ def call(args) {
       )
 
       if (parallelStages && !parallelStages.isEmpty()) {
-        parallel parallelStages, failFast: true
+        parallel parallelStages
       } else {
         echo "No security stages enabled"
       }
