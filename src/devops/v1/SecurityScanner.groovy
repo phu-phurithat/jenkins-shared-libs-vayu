@@ -87,7 +87,7 @@ def imageScan(FULL_IMAGE) {
 def secretScan() {
   try {
     sh '''
-      detect --source=. \
+      gitleaks detect --source=. \
              --report-path=gitleaks-report.json \
              --redact 
     '''
