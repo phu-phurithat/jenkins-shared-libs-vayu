@@ -146,6 +146,7 @@ def call(args) {
       }
 
       stage('Import report') {
+        echo "Engagament name: ${engagementName}"
         defectdojo.importReport(productName, engagementName)
       }
 
