@@ -1,6 +1,6 @@
 package devops.v1
 
-def ImportReport(productName, engagementName) {
+def importReport(productName, engagementName) {
   // def productName = "${fullPath}-${component}"
   // def engagementName = "${component}:${imageTag}"
   def productJson

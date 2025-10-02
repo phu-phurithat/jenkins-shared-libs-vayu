@@ -141,12 +141,12 @@ def call(args) {
 
       stage('Image Scan') {
         container('trivy') {
-          scanner.ImageScan(fullImageName)
+          scanner.imageScan(fullImageName)
         }
       }
 
       stage('Import report') {
-        defectdojo.ImportReport(productName, engagementName)
+        defectdojo.importReport(productName, engagementName)
       }
 
       if (args.AUTO_DEPLOY in [true, 'true']) {
