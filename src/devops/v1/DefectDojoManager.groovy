@@ -55,6 +55,7 @@ def ImportReport(productName, engagementName) {
                         returnStdout: true
                     )
  engagementJson = readJSON text: engagementCheck
+ echo "engagementJson: ${engagementJson}"
    if (engagementJson!=null && engagementJson.count.toInteger() > 0) {
                        engagementId = engagementJson.results[0].id
                         echo "✅ Found Engagement ID: ${engagementId}"
