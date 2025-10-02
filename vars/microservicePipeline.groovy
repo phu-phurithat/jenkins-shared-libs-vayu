@@ -212,8 +212,7 @@ private def getParallelStages(
   if (security?.code in [true, 'true']) {
     stages['Source Code Scan'] = {
       container('sonarqube') {
-        // NOTE: If your method name is actually SourceCodeScan, rename below.
-        scanner.SorceCodeScan(sonarProjectKey, sonarProjectName, language)
+        scanner.sourceCodeScan(sonarProjectKey, sonarProjectName, language)
       }
     }
   }
@@ -221,7 +220,7 @@ private def getParallelStages(
   if (security?.dependency in [true, 'true']) {
     stages['Dependencies Scan'] = {
       container('trivy') {
-        scanner.DependenciesScan()
+        scanner.dependenciesScan()
       }
     }
   }
@@ -229,10 +228,19 @@ private def getParallelStages(
   if (security?.image in [true, 'true']) {
     stages['Build Docker Image'] = {
       container('buildkit') {
-        builder.BuildImage(fullImageName)
+        builder.buildImage(fullImageName)
+      }
+    }
+  }
+
+  if (security?.secret in [true, 'true']) {
+    stages['Secret Scan'] = {
+      container('gitleaks') {
+        scanner.secretScan()
       }
     }
   }
 
   return stages
 }
+
