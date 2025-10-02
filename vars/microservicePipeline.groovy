@@ -122,22 +122,7 @@ def call(args) {
           builder.Compile(build_tool)
       }
       // Dynamic parallel stages (conditioned by properties.security.*)
-      def parallelStages = getParallelStages(
-        properties.security ?: [:],
-        scanner,
-        builder,
-        sonarProjectKey,
-        sonarProjectName,
-        language,
-        fullImageName
-      )
-
-      if (parallelStages && !parallelStages.isEmpty()) {
-        parallel parallelStages
-      } else {
-        echo "No security stages enabled"
-      }
-
+     
       stage('Image Scan') {
         container('trivy') {
           scanner.imageScan(fullImageName)
