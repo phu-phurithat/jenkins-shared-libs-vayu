@@ -39,7 +39,7 @@ def call(args) {
 
     dir('deployment') {
       stage('Checkout Deployment Repository') {
-        git url: args.DEPLOYMENT_REPO, branch: targetBranch
+        git url: args.DEPLOYMENT_REPO, branch: args.BRANCH
       }
 
       stage('Read Configuration from "config.yaml"') {
@@ -81,7 +81,7 @@ def call(args) {
         echo "Engagement:${engagementName}"
 
         echo "Cloning microservice repository: ${microserviceRepo}"
-        git url: microserviceRepo, branch: targetBranch
+        git url: microserviceRepo, branch: args.BRANCH
       }
 
       stage('Read Properties from "devops.properties.yaml"') {
@@ -117,7 +117,7 @@ def call(args) {
   podTemplate(yaml: pt.toString()) {
     node(POD_LABEL) {
       stage('Checkout Source Code Repository') {
-        git url: microserviceRepo, branch: targetBranch
+        git url: microserviceRepo, branch: args.BRANCH
       }
 
       String build_tool = properties.build_tool?.toLowerCase()
@@ -158,7 +158,7 @@ def call(args) {
       if (args.AUTO_DEPLOY in [true, 'true']) {
         dir('deployment') {
           stage('Checkout Deployment Repository') {
-            git url: args.DEPLOYMENT_REPO, branch: targetBranch
+            git url: args.DEPLOYMENT_REPO, branch: args.BRANCH
           }
 
           String kubeconfigCred = config.environments[args.TARGET_ENV].cluster.toLowerCase()
