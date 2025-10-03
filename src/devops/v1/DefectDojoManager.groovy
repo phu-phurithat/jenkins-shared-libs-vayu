@@ -22,7 +22,7 @@ def importReport(productName, engagementName) {
 
     echo "productCheck: ${productCheck}"
     productJson = readJSON text: productCheck
-    if (productJson != null && productJson.count.toInteger() > 0) {
+    if (productJson.count.toInteger() > 0) {
       productId = productJson.results[0].id
       echo "✅ Found Product ID: ${productId}"
                     } else {
@@ -49,13 +49,14 @@ def importReport(productName, engagementName) {
 
       def engagementCheck = sh(
                         script: """
-                          curl -s -k "${DEFECTDOJO_BASE_URL}/api/v2/engagements/?name=${productName}&product=${productId}" \
+                          curl -s -k "${DEFECTDOJO_BASE_URL}/api/v2/engagements/?name=${engagementName}&product=${productId}" \
                             -H "Authorization: Token $DOJO_KEY"
                         """,
                         returnStdout: true
                     )
+      echo "engagementCheck: ${engagementCheck}"
       engagementJson = readJSON text: engagementCheck
-      if (engagementJson != null && engagementJson.count.toInteger() > 0) {
+      if ( engagementJson.count.toInteger() > 0) {
         engagementId = engagementJson.results[0].id
         echo "✅ Found Engagement ID: ${engagementId}"
                     } else {
@@ -69,6 +70,7 @@ def importReport(productName, engagementName) {
       -d '{
             "name": "${engagementName}",
             "product": "${productId}",
+            "engagement_type": 1,
             "status": "In Progress",
             "target_start": "${today}",
             "target_end": "${nextWeek}"
