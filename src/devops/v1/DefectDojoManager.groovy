@@ -71,7 +71,6 @@ def importReport(productName, engagementName) {
       -d '{
             "name": "${engagementName}",
             "product": "${productId}",
-            "engagement_type": 1,
             "status": "In Progress",
             "target_start": "${today}",
             "target_end": "${nextWeek}"
