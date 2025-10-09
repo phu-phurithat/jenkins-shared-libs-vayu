@@ -115,7 +115,7 @@ def importReport(productName, engagementName) {
             -F engagement_name=${engagementName} \
             -F deduplication_on_engagement=true \
             -F close_old_findings=true \
-            -F auto_create_context=trueengagementName
+            -F auto_create_context=true
         """
 
         //Trivy Scan Image
