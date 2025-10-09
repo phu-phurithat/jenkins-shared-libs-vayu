@@ -46,7 +46,7 @@ def importReport(productName, engagementName) {
       productId = productObj.id
       // echo "✅ New :prooduct object:${productObj}"
       echo "✅ New Product ID: ${productId}"
-
+}
       def engagementCheck = sh(
                         script: """
                         curl -s -k "${DEFECT_DOJO_BASE_URL}/api/v2/engagements/?name=${engagementName}&product=${productId}" \
@@ -84,7 +84,7 @@ def importReport(productName, engagementName) {
       engagementId = engagementObj.id
       // echo "✅ New :engagementObj:${engagementObj}"
       echo "✅ New Engagement ID: ${engagementId}"
-    }
+    
 
     //SonarQube Scan Source Code
     sh """
