@@ -78,13 +78,13 @@ def importReport(productName, engagementName) {
   """,
   returnStdout: true
 )
-      }
+     
 
       def engagementObj = readJSON text: engagementJson
       engagementId = engagementObj.id
       // echo "✅ New :engagementObj:${engagementObj}"
       echo "✅ New Engagement ID: ${engagementId}"
-    
+     }
 
     //SonarQube Scan Source Code
     sh """
