@@ -49,9 +49,9 @@ def importReport(productName, engagementName) {
 
       def engagementCheck = sh(
                         script: """
-                          curl -s -k "${DEFECTDOJO_BASE_URL}/api/v2/engagements/?name=${engagementName}&product=${productId}" \
-                            -H "Authorization: Token $DOJO_KEY"
-                        """,
+                        curl -s -k "${DEFECT_DOJO_BASE_URL}/api/v2/engagements/?name=${engagementName}&product=${productId}" \
+                             -H "Authorization: Token ${defectdojo_api_key}"
+                    """,
                         returnStdout: true
                     )
       echo "engagementCheck: ${engagementCheck}"
